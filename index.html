@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet" />
+    <script src="/env.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
       :root {
@@ -695,9 +696,9 @@
       const STORAGE_KEY = "tattooshop-clipboard-state";
       const DEVICE_KEY = "tattooshop-clipboard-device-id";
       const SYNC_KEY = "tattooshop-clipboard-sync-key";
-      const SUPABASE_URL = "";
-      const SUPABASE_ANON_KEY = "";
-      const SUPABASE_TABLE = "clipboard_sessions";
+      const SUPABASE_URL = window.APP_CONFIG?.SUPABASE_URL || "";
+      const SUPABASE_ANON_KEY = window.APP_CONFIG?.SUPABASE_ANON_KEY || "";
+      const SUPABASE_TABLE = window.APP_CONFIG?.SUPABASE_TABLE || "clipboard_sessions";
       const supabaseClient = (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY)
         ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
         : null;
@@ -1237,7 +1238,6 @@
     </script>
   </body>
 </html>
-
 
 
 
