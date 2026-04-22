@@ -1,0 +1,1243 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#111317" />
+    <title>TattooShop Clipboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      :root {
+        --bg: #0b0908;
+        --panel: #15100d;
+        --panel-2: #1b140f;
+        --line: rgba(255, 255, 255, 0.08);
+        --line-strong: rgba(255, 255, 255, 0.14);
+        --text: #f3ede7;
+        --muted: #aa9d91;
+        --accent: #f28b3c;
+        --accent-2: #d96f25;
+        --shadow: 0 18px 50px rgba(0, 0, 0, 0.38);
+        --radius: 16px;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: Montserrat, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(242, 139, 60, 0.16), transparent 30%),
+          radial-gradient(circle at 90% 0%, rgba(217, 111, 37, 0.12), transparent 22%),
+          var(--bg);
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: geometricPrecision;
+      }
+
+      button, input, select, textarea {
+        font: inherit;
+      }
+
+      .app {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: calc(14px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom));
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 14px;
+        position: relative;
+        min-height: 52px;
+      }
+
+      .title {
+        margin: 0;
+        font-size: clamp(28px, 4vw, 42px);
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 0.95;
+      }
+
+      .subtle {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.3;
+      }
+
+      .card {
+        background: rgba(21, 16, 13, 0.92);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(16px);
+      }
+
+      .toolbar {
+        padding: 12px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .btn {
+        min-height: 48px;
+        border: 1px solid var(--line-strong);
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+        color: var(--text);
+        padding: 0 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      }
+      .btn:active { transform: translateY(1px) scale(0.99); }
+      .btn.primary {
+        background: linear-gradient(180deg, rgba(242, 139, 60, 0.32), rgba(217, 111, 37, 0.18));
+        border-color: rgba(242, 139, 60, 0.5);
+      }
+      .btn.ghost {
+        background: rgba(255,255,255,0.02);
+      }
+
+      .icon {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+        flex: 0 0 auto;
+      }
+
+      .section {
+        padding: 14px;
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,0.03);
+        color: var(--text);
+      }
+
+      .pill input {
+        width: 1px;
+        min-width: 0;
+        flex: 1;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--text);
+      }
+
+      .groups {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: none;
+      }
+      .groups::-webkit-scrollbar { display: none; }
+
+      .group {
+        white-space: nowrap;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,0.03);
+        color: var(--text);
+        padding: 10px 12px;
+        border-radius: 999px;
+        cursor: pointer;
+        flex: 0 0 auto;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .clip-btn {
+        min-height: 126px;
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+        border-radius: 16px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 12px;
+        text-align: left;
+        cursor: pointer;
+      }
+      .clip-btn.dragging { opacity: 0.45; }
+      .clip-btn:hover { border-color: rgba(255,255,255,0.16); }
+
+      .clip-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        align-items: flex-start;
+      }
+      .clip-name {
+        font-weight: 700;
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        margin: 0;
+        font-size: 16px;
+      }
+      .clip-group {
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .clip-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+      .clip-text {
+        margin: 0;
+        color: rgba(237, 240, 244, 0.86);
+        font-size: 13px;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 53px;
+      }
+
+      .thumb {
+        width: 100%;
+        height: 72px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: #0f1115;
+      }
+
+      .small {
+        min-height: 38px;
+        padding: 0 12px;
+        border-radius: 12px;
+        font-size: 13px;
+      }
+
+      .empty {
+        padding: 30px 14px;
+        text-align: center;
+        color: var(--muted);
+        border: 1px dashed var(--line);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.02);
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 12px;
+        background: rgba(0,0,0,0.5);
+        z-index: 50;
+      }
+      .modal.open { display: flex; }
+      .sheet {
+        width: min(100%, 720px);
+        max-height: 92vh;
+        overflow: auto;
+        border-radius: 24px;
+        background: #11151a;
+        border: 1px solid var(--line-strong);
+        box-shadow: var(--shadow);
+        padding: 16px;
+      }
+      .sheet h2 {
+        margin: 0 0 12px;
+        font-size: 24px;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+      .form {
+        display: grid;
+        gap: 12px;
+      }
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+      .field label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .field input, .field textarea, .field select {
+        width: 100%;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #0b0d10;
+        color: var(--text);
+        padding: 13px 14px;
+        outline: none;
+      }
+      .field textarea { min-height: 110px; resize: vertical; }
+      .sheet-foot {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 4px;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: calc(16px + env(safe-area-inset-bottom));
+        transform: translateX(-50%);
+        background: rgba(17, 21, 26, 0.95);
+        border: 1px solid var(--line-strong);
+        color: var(--text);
+        padding: 12px 14px;
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        z-index: 60;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .18s ease, transform .18s ease;
+        max-width: calc(100vw - 24px);
+        text-align: center;
+        font-size: 13px;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-3px);
+      }
+
+      .topline {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .device-badge {
+        display: none;
+      }
+
+      .device-badge strong {
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .gear-btn {
+        min-height: 44px;
+        width: 44px;
+        padding: 0;
+      }
+
+      .topgear {
+        position: absolute;
+        right: 0;
+        top: 0;
+      }
+
+      .fab {
+        position: fixed;
+        right: 16px;
+        bottom: calc(16px + env(safe-area-inset-bottom));
+        z-index: 40;
+      }
+
+      .fab-main {
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .fab-menu {
+        position: absolute;
+        right: 0;
+        bottom: 64px;
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .fab.open .fab-menu { display: flex; }
+
+      .fab-item {
+        min-width: 148px;
+        justify-content: flex-start;
+      }
+
+      .modal-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .group-block {
+        margin-bottom: 10px;
+      }
+
+      .group-heading {
+        margin: 0 0 10px;
+        font-size: 16px;
+        letter-spacing: -0.03em;
+        font-weight: 700;
+      }
+
+      .group-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .code-tools {
+        display: grid;
+        gap: 10px;
+      }
+
+      .code-preview {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,0.03);
+        border-radius: 14px;
+        padding: 10px 12px;
+      }
+
+      .code-preview strong {
+        letter-spacing: 0.16em;
+        font-size: 16px;
+      }
+
+      .code-qr {
+        width: 104px;
+        height: 104px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: #fff;
+        overflow: hidden;
+        flex: 0 0 auto;
+      }
+
+      .code-qr img {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .mini-note {
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.25;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--muted);
+        display: inline-block;
+      }
+
+      .status-dot.live { background: #63d17e; }
+      .status-dot.offline { background: #d6a15c; }
+
+      .group-drag {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .drag-handle {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,0.03);
+        cursor: grab;
+        flex: 0 0 auto;
+      }
+
+      .drag-handle:active { cursor: grabbing; }
+
+      @media (min-width: 760px) {
+        .modal { align-items: center; }
+        .sheet { padding: 18px; }
+        .grid { gap: 12px; }
+        .clip-btn { min-height: 140px; }
+      }
+
+      @media (max-width: 420px) {
+        .toolbar { grid-template-columns: 1fr 1fr; }
+        .grid { gap: 8px; }
+        .clip-btn { min-height: 118px; padding: 10px; }
+        .title { font-size: 30px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <div class="topbar">
+        <div class="topline">
+          <h1 class="title">TattooShop Clipboard</h1>
+        </div>
+        <button class="btn ghost gear-btn topgear" id="codeSettingsBtn" type="button" aria-label="Code settings">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a7.9 7.9 0 0 0 .1-1l2-1.5-2-3.5-2.4.5a7.6 7.6 0 0 0-.8-.6l-.3-2.4H10l-.3 2.4a7.6 7.6 0 0 0-.8.6L6.5 9 4.5 12.5l2 1.5a7.9 7.9 0 0 0 .1 1 7.9 7.9 0 0 0-.1 1l-2 1.5 2 3.5 2.4-.5a7.6 7.6 0 0 0 .8.6l.3 2.4h5.4l.3-2.4a7.6 7.6 0 0 0 .8-.6l2.4.5 2-3.5-2-1.5a7.9 7.9 0 0 0-.1-1Z"/></svg>
+        </button>
+      </div>
+
+      <section class="card section">
+        <div id="buttonsList"></div>
+        <div id="emptyState" class="empty" hidden>
+          No buttons yet. Create your first copy button.
+        </div>
+      </section>
+    </main>
+
+    <div class="modal" id="editorModal" aria-hidden="true">
+      <div class="sheet">
+        <div class="modal-head">
+          <h2 id="editorTitle">Create button</h2>
+          <button type="button" class="btn ghost gear-btn" id="closeEditorBtn" aria-label="Close editor">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <form class="form" id="editorForm">
+          <div class="field">
+            <label for="nameInput">Name</label>
+            <input id="nameInput" required maxlength="80" placeholder="Paste reply" />
+          </div>
+          <div class="field">
+            <label for="templateInput">Template</label>
+            <select id="templateInput">
+              <option value="">Blank</option>
+              <option value="greeting">Greeting</option>
+              <option value="pricing">Pricing</option>
+              <option value="aftercare">Aftercare</option>
+              <option value="booking">Booking follow-up</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="groupInput">Group</label>
+            <select id="groupInput"></select>
+          </div>
+          <div class="field">
+            <label for="textInput">Text</label>
+            <textarea id="textInput" required placeholder="Text to copy"></textarea>
+          </div>
+          <div class="field">
+            <label for="imageInput">Add image url</label>
+            <input id="imageInput" placeholder="https://..." />
+          </div>
+          <input type="hidden" id="buttonIdInput" />
+          <div class="sheet-foot">
+            <button type="button" class="btn ghost" id="cancelEditorBtn">Cancel</button>
+            <button type="submit" class="btn primary" id="saveButtonBtn">Save button</button>
+          </div>
+          <div class="sheet-foot">
+            <button type="button" class="btn ghost" id="duplicateButtonBtn">Duplicate</button>
+            <button type="button" class="btn ghost" id="deleteButtonBtn">Delete</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal" id="groupModal" aria-hidden="true">
+      <div class="sheet">
+        <h2>Create group</h2>
+        <form class="form" id="groupForm">
+          <div class="field">
+            <label for="groupNameInput">Group name</label>
+            <input id="groupNameInput" required maxlength="40" placeholder="Favorites" />
+          </div>
+          <div class="sheet-foot">
+            <button type="button" class="btn ghost" id="cancelGroupBtn">Cancel</button>
+            <button type="submit" class="btn primary">Save group</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal" id="deleteModal" aria-hidden="true">
+      <div class="sheet" style="max-width: 420px;">
+        <div class="modal-head">
+          <h2>Delete button</h2>
+          <button type="button" class="btn ghost gear-btn" id="closeDeleteBtn" aria-label="Close delete dialog">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <div class="form">
+          <div class="mini-note" style="font-size: 13px; color: var(--text);">
+            Delete this button?
+          </div>
+          <div class="mini-note">This action cannot be undone.</div>
+          <div class="sheet-foot">
+            <button type="button" class="btn ghost" id="cancelDeleteBtn">Cancel</button>
+            <button type="button" class="btn primary" id="confirmDeleteBtn">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="codeModal" aria-hidden="true">
+      <div class="sheet">
+        <div class="modal-head">
+          <h2>Code settings</h2>
+          <button type="button" class="btn ghost gear-btn" id="closeCodeBtn" aria-label="Close code settings">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <div class="form">
+          <div class="code-preview">
+            <div>
+              <div class="mini-note">Sync key</div>
+              <strong id="codePreview">--------</strong>
+            </div>
+            <button type="button" class="btn small" id="copyCodeBtn">Copy</button>
+          </div>
+          <div class="code-preview" style="align-items: center;">
+            <div class="mini-note" style="max-width: 170px;">QR preview for quick transfer to another device.</div>
+            <div class="code-qr"><img id="codeQrImg" alt="QR code preview" /></div>
+          </div>
+          <div class="field">
+            <label for="manualCodeInput">Enter sync key directly</label>
+            <textarea id="manualCodeInput" placeholder="Paste sync key here"></textarea>
+          </div>
+          <div class="field">
+            <label for="codeText">Portable session data</label>
+            <textarea id="codeText" readonly></textarea>
+          </div>
+          <div class="sheet-foot">
+            <button type="button" class="btn ghost" id="loadManualCodeBtn">Load code</button>
+            <button type="button" class="btn primary" id="generateCodeBtn">Generate code</button>
+          </div>
+          <div class="code-preview">
+            <div class="mini-note"><span class="status-dot" id="syncStatusDot"></span> <span id="syncStatusText">Local only</span></div>
+            <button type="button" class="btn small" id="syncNowBtn">Sync now</button>
+          </div>
+          <div class="sheet-foot">
+            <button type="button" class="btn ghost" id="downloadJsonBtn">Export JSON</button>
+            <label class="btn ghost" for="fileInput" style="cursor:pointer;">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M4 7V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2h-4"/><path d="M14 3v6h6"/><path d="M12 11v10"/><path d="M8 17l4 4 4-4"/></svg>
+              Upload JSON
+            </label>
+          </div>
+          <input id="fileInput" type="file" accept="application/json,.json" hidden />
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="fab" id="fab">
+      <div class="fab-menu" id="fabMenu">
+        <button class="btn ghost fab-item" id="fabGroupBtn" type="button"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Create group</button>
+        <button class="btn ghost fab-item" id="fabButtonBtn" type="button"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Create button</button>
+      </div>
+      <button class="btn primary fab-main" id="fabToggleBtn" type="button" aria-label="Open create menu">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+
+    <script>
+      const STORAGE_KEY = "tattooshop-clipboard-state";
+      const DEVICE_KEY = "tattooshop-clipboard-device-id";
+      const SYNC_KEY = "tattooshop-clipboard-sync-key";
+      const SUPABASE_URL = "";
+      const SUPABASE_ANON_KEY = "";
+      const SUPABASE_TABLE = "clipboard_sessions";
+      const supabaseClient = (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY)
+        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        : null;
+
+      const els = {
+        buttonsList: document.getElementById("buttonsList"),
+        emptyState: document.getElementById("emptyState"),
+        groupInput: document.getElementById("groupInput"),
+        fileInput: document.getElementById("fileInput"),
+        editorModal: document.getElementById("editorModal"),
+        groupModal: document.getElementById("groupModal"),
+        deleteModal: document.getElementById("deleteModal"),
+        codeModal: document.getElementById("codeModal"),
+        editorForm: document.getElementById("editorForm"),
+        groupForm: document.getElementById("groupForm"),
+        editorTitle: document.getElementById("editorTitle"),
+        nameInput: document.getElementById("nameInput"),
+        templateInput: document.getElementById("templateInput"),
+        textInput: document.getElementById("textInput"),
+        imageInput: document.getElementById("imageInput"),
+        buttonIdInput: document.getElementById("buttonIdInput"),
+        groupNameInput: document.getElementById("groupNameInput"),
+        codePreview: document.getElementById("codePreview"),
+        codeText: document.getElementById("codeText"),
+        manualCodeInput: document.getElementById("manualCodeInput"),
+        codeQrImg: document.getElementById("codeQrImg"),
+        syncStatusDot: document.getElementById("syncStatusDot"),
+        syncStatusText: document.getElementById("syncStatusText"),
+        toast: document.getElementById("toast"),
+      };
+      const state = loadState();
+      let currentSessionCode = "";
+      let currentSyncKey = localStorage.getItem(SYNC_KEY) || "";
+      let pendingDeleteId = null;
+
+      function uid() {
+        return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
+      }
+
+      function getDeviceId() {
+        let id = localStorage.getItem(DEVICE_KEY);
+        if (!id) {
+          id = "device_" + uid();
+          localStorage.setItem(DEVICE_KEY, id);
+        }
+        return id;
+      }
+
+      function defaultState(deviceId) {
+        return {
+          version: 1,
+          deviceId,
+          groups: [{ id: "g-default", name: "General" }],
+          buttons: [],
+        };
+      }
+
+      function loadState() {
+        const deviceId = getDeviceId();
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return defaultState(deviceId);
+          const parsed = JSON.parse(raw);
+          return {
+            ...defaultState(deviceId),
+            ...parsed,
+            deviceId,
+            groups: Array.isArray(parsed.groups) && parsed.groups.length ? parsed.groups : defaultState(deviceId).groups,
+            buttons: Array.isArray(parsed.buttons) ? parsed.buttons : [],
+          };
+        } catch {
+          return defaultState(deviceId);
+        }
+      }
+
+      function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        updateUI();
+      }
+
+      function showToast(message) {
+        els.toast.textContent = message;
+        els.toast.classList.add("show");
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => els.toast.classList.remove("show"), 1700);
+      }
+
+      function openModal(modal) {
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+      }
+      function closeModal(modal) {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+      }
+
+      function encodeSession(data) {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let out = "";
+        const seed = JSON.stringify(data) + Date.now().toString(36);
+        for (let i = 0; i < 8; i++) {
+          const code = seed.charCodeAt(i % seed.length) + i * 17;
+          out += chars[code % chars.length];
+        }
+        return out;
+      }
+
+      function decodeSession(code) {
+        const raw = code.trim();
+        if (!raw) throw new Error("Empty input");
+        try {
+          return JSON.parse(raw);
+        } catch {
+          const stored = localStorage.getItem(`${STORAGE_KEY}:code:${raw}`);
+          if (stored) return JSON.parse(stored);
+          throw new Error("Unknown code");
+        }
+      }
+
+      function copyText(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+          return navigator.clipboard.writeText(text);
+        }
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        return Promise.resolve();
+      }
+
+      function normalizeName(name) {
+        return String(name || "").trim();
+      }
+
+      function updateGroupOptions(selectedId = "g-default") {
+        els.groupInput.innerHTML = state.groups.map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join("");
+        els.groupInput.value = selectedId;
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, s => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[s]));
+      }
+
+      function renderButtons() {
+        const grouped = new Map();
+        state.groups.forEach(group => grouped.set(group.id, { ...group, buttons: [] }));
+        state.buttons.forEach(btn => {
+          const groupId = btn.groupId && grouped.has(btn.groupId) ? btn.groupId : "g-default";
+          if (!grouped.has(groupId)) grouped.set(groupId, { id: groupId, name: "General", buttons: [] });
+          grouped.get(groupId).buttons.push(btn);
+        });
+        const groups = Array.from(grouped.values()).filter(group => group.buttons.length);
+
+        els.buttonsList.innerHTML = groups.map(group => `
+          <section class="group-block">
+            <div class="group-drag" data-group-header="${group.id}" draggable="true">
+              <button class="drag-handle" type="button" aria-label="Drag group ${escapeHtml(group.name)}">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M9 5h2M13 5h2M9 12h2M13 12h2M9 19h2M13 19h2"/></svg>
+              </button>
+              <h3 class="group-heading" style="margin:0;">${escapeHtml(group.name)}</h3>
+            </div>
+            <div class="group-grid">
+              ${group.buttons.map(btn => `
+                <article class="clip-btn" data-id="${btn.id}" draggable="true">
+                  <div class="clip-head">
+                    <div>
+                      <h4 class="clip-name">${escapeHtml(btn.name)}${btn.favorite ? " *" : ""}</h4>
+                    </div>
+                    <div class="clip-actions">
+                      <button class="btn small edit-btn" data-fav="${btn.id}" type="button" aria-label="Favorite ${escapeHtml(btn.name)}">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="m12 17.3-6.18 3.25 1.18-6.89-5-4.87 6.91-1L12 1.5l3.09 6.27 6.91 1-5 4.87 1.18 6.89z"/></svg>
+                      </button>
+                      <button class="btn small edit-btn" data-edit="${btn.id}" type="button" aria-label="Edit ${escapeHtml(btn.name)}">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16v4Z"/><path d="M13 7l4 4"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  ${btn.imageUrl ? `<img class="thumb" src="${escapeHtml(btn.imageUrl)}" alt="${escapeHtml(btn.name)}">` : ""}
+                  <p class="clip-text">${escapeHtml(btn.text)}</p>
+                </article>
+              `).join("")}
+            </div>
+          </section>
+        `).join("");
+        els.emptyState.hidden = groups.length > 0;
+        updateGroupOptions();
+      }
+
+      function updateUI() {
+        renderButtons();
+        updateGroupOptions();
+      }
+
+      const templates = {
+        greeting: "Hi! Thanks for reaching out. How can I help you today?",
+        pricing: "Here is the current pricing:\n\n- Small: \n- Medium: \n- Large: ",
+        aftercare: "Aftercare:\n\n- Keep it clean\n- Avoid soaking\n- Use recommended ointment",
+        booking: "Thanks for the message. If you'd like to book, send your preferred date and design idea.",
+      };
+
+      function openEditor(button = null) {
+        els.editorForm.reset();
+        els.templateInput.value = "";
+        const deleteBtn = document.getElementById("deleteButtonBtn");
+        const duplicateBtn = document.getElementById("duplicateButtonBtn");
+        if (button) {
+          els.editorTitle.textContent = "Edit button";
+          els.nameInput.value = button.name;
+          els.textInput.value = button.text;
+          els.imageInput.value = button.imageUrl || "";
+          els.buttonIdInput.value = button.id;
+          updateGroupOptions(button.groupId);
+          deleteBtn.dataset.buttonId = button.id;
+          duplicateBtn.dataset.buttonId = button.id;
+        } else {
+          els.editorTitle.textContent = "Create button";
+          els.buttonIdInput.value = "";
+          updateGroupOptions("g-default");
+          delete deleteBtn.dataset.buttonId;
+          delete duplicateBtn.dataset.buttonId;
+        }
+        openModal(els.editorModal);
+      }
+
+      function deleteButtonById(id) {
+        const index = state.buttons.findIndex(b => b.id === id);
+        if (index >= 0) {
+          state.buttons.splice(index, 1);
+          saveState();
+          showToast("Button deleted.");
+        }
+      }
+
+      els.templateInput?.addEventListener("change", () => {
+        const preset = templates[els.templateInput.value];
+        if (preset) els.textInput.value = preset;
+      });
+
+      function openGroupCreator() {
+        els.groupForm.reset();
+        openModal(els.groupModal);
+      }
+
+      function makePortableSnapshot() {
+        return {
+          version: state.version,
+          deviceId: state.deviceId,
+          groups: state.groups,
+          buttons: state.buttons,
+          exportedAt: new Date().toISOString(),
+        };
+      }
+
+      function normalizeButtons() {
+        return;
+      }
+
+      function refreshCodeTools() {
+        const snapshot = makePortableSnapshot();
+        if (!currentSyncKey) {
+          currentSyncKey = encodeSession(snapshot);
+          localStorage.setItem(SYNC_KEY, currentSyncKey);
+        }
+        currentSessionCode = currentSyncKey;
+        els.codePreview.textContent = currentSyncKey;
+        els.codeText.value = JSON.stringify(snapshot, null, 2);
+        els.codeQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=0&data=${encodeURIComponent(currentSyncKey)}`;
+        localStorage.setItem(`${STORAGE_KEY}:code:${currentSyncKey}`, JSON.stringify(snapshot));
+        els.syncStatusDot.className = `status-dot ${supabaseClient ? "live" : "offline"}`;
+        els.syncStatusText.textContent = supabaseClient ? "Supabase sync ready" : "Local only";
+      }
+
+      async function syncToSupabase() {
+        if (!supabaseClient || !currentSyncKey) {
+          showToast("Supabase is not configured yet.");
+          return;
+        }
+        const snapshot = makePortableSnapshot();
+        const payload = {
+          sync_key: currentSyncKey,
+          payload: snapshot,
+          updated_at: new Date().toISOString(),
+        };
+        const { error } = await supabaseClient.from(SUPABASE_TABLE).upsert(payload, { onConflict: "sync_key" });
+        if (error) throw error;
+        showToast("Synced to Supabase.");
+      }
+
+      async function loadFromSupabase(syncKey) {
+        if (!supabaseClient || !syncKey) return false;
+        const { data, error } = await supabaseClient
+          .from(SUPABASE_TABLE)
+          .select("payload")
+          .eq("sync_key", syncKey)
+          .maybeSingle();
+        if (error || !data?.payload) return false;
+        const payload = data.payload;
+        state.deviceId = payload.deviceId || state.deviceId;
+        state.groups = Array.isArray(payload.groups) && payload.groups.length ? payload.groups : defaultState(state.deviceId).groups;
+        state.buttons = Array.isArray(payload.buttons) ? payload.buttons : [];
+        saveState();
+        return true;
+      }
+
+      document.getElementById("codeSettingsBtn").addEventListener("click", () => {
+        refreshCodeTools();
+        openModal(els.codeModal);
+      });
+      document.getElementById("closeCodeBtn").addEventListener("click", () => closeModal(els.codeModal));
+      document.getElementById("loadManualCodeBtn").addEventListener("click", () => {
+        const raw = els.manualCodeInput.value.trim();
+        if (!raw) return;
+        try {
+          currentSyncKey = raw;
+          localStorage.setItem(SYNC_KEY, currentSyncKey);
+          refreshCodeTools();
+          loadFromSupabase(currentSyncKey).then(found => {
+            closeModal(els.codeModal);
+            showToast(found ? "Code loaded." : "Sync key saved.");
+          });
+        } catch {
+          showToast("Could not load that code.");
+        }
+      });
+      document.getElementById("downloadJsonBtn").addEventListener("click", () => {
+        const blob = new Blob([JSON.stringify(makePortableSnapshot(), null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `tattooshop-clipboard-${state.deviceId}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast("Export started.");
+      });
+      document.getElementById("generateCodeBtn").addEventListener("click", async () => {
+        refreshCodeTools();
+        await copyText(currentSessionCode).catch(() => {});
+        showToast("Session code generated and copied.");
+      });
+      document.getElementById("syncNowBtn").addEventListener("click", async () => {
+        try {
+          refreshCodeTools();
+          await syncToSupabase();
+        } catch (error) {
+          showToast("Supabase sync failed.");
+        }
+      });
+      document.getElementById("fabToggleBtn").addEventListener("click", () => {
+        document.getElementById("fab").classList.toggle("open");
+      });
+      document.getElementById("fabGroupBtn").addEventListener("click", () => {
+        document.getElementById("fab").classList.remove("open");
+        openGroupCreator();
+      });
+      document.getElementById("fabButtonBtn").addEventListener("click", () => {
+        document.getElementById("fab").classList.remove("open");
+        openEditor();
+      });
+      document.getElementById("cancelEditorBtn").addEventListener("click", () => closeModal(els.editorModal));
+      document.getElementById("closeEditorBtn").addEventListener("click", () => closeModal(els.editorModal));
+      document.getElementById("cancelGroupBtn").addEventListener("click", () => closeModal(els.groupModal));
+      document.getElementById("copyCodeBtn").addEventListener("click", async () => {
+        await copyText(currentSessionCode);
+        showToast("Code copied.");
+      });
+      document.getElementById("deleteButtonBtn").addEventListener("click", () => {
+        const id = document.getElementById("deleteButtonBtn").dataset.buttonId;
+        if (!id) return;
+        pendingDeleteId = id;
+        openModal(els.deleteModal);
+      });
+      document.getElementById("duplicateButtonBtn").addEventListener("click", () => {
+        const id = document.getElementById("duplicateButtonBtn").dataset.buttonId;
+        const btn = state.buttons.find(b => b.id === id);
+        if (!btn) return;
+        if (confirm("Duplicate this button?")) {
+          state.buttons.unshift({
+            ...btn,
+            id: uid(),
+            name: `${btn.name} copy`,
+          });
+          saveState();
+          showToast("Button duplicated.");
+        }
+      });
+
+      els.buttonsList.addEventListener("click", async (e) => {
+        const edit = e.target.closest("[data-edit]");
+        const fav = e.target.closest("[data-fav]");
+        if (fav) {
+          const btn = state.buttons.find(b => b.id === fav.dataset.fav);
+          if (btn) {
+            btn.favorite = !btn.favorite;
+            normalizeButtons();
+            saveState();
+          }
+          return;
+        }
+        if (edit) {
+          const btn = state.buttons.find(b => b.id === edit.dataset.edit);
+          if (btn) openEditor(btn);
+          return;
+        }
+        const card = e.target.closest("[data-id]");
+        if (!card) return;
+        const btn = state.buttons.find(b => b.id === card.dataset.id);
+        if (!btn) return;
+        await copyText(btn.text);
+        showToast(`Copied ${btn.name}.`);
+      });
+
+      let dragButtonId = null;
+      els.buttonsList.addEventListener("dragstart", (e) => {
+        const card = e.target.closest(".clip-btn");
+        if (!card) return;
+        dragButtonId = card.dataset.id;
+        card.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", dragButtonId);
+      });
+
+      els.buttonsList.addEventListener("dragover", (e) => {
+        const card = e.target.closest(".clip-btn");
+        if (!card || !dragButtonId) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      });
+
+      els.buttonsList.addEventListener("drop", (e) => {
+        const card = e.target.closest(".clip-btn");
+        if (!card || !dragButtonId) return;
+        e.preventDefault();
+        const targetId = card.dataset.id;
+        if (targetId === dragButtonId) return;
+        const from = state.buttons.findIndex(b => b.id === dragButtonId);
+        const to = state.buttons.findIndex(b => b.id === targetId);
+        if (from < 0 || to < 0) return;
+        const moved = state.buttons.splice(from, 1)[0];
+        state.buttons.splice(to, 0, moved);
+        dragButtonId = null;
+        saveState();
+      });
+
+      document.addEventListener("dragend", () => {
+        dragButtonId = null;
+        document.querySelectorAll(".clip-btn.dragging").forEach(el => el.classList.remove("dragging"));
+      });
+
+      document.getElementById("cancelDeleteBtn").addEventListener("click", () => {
+        pendingDeleteId = null;
+        closeModal(els.deleteModal);
+      });
+      document.getElementById("closeDeleteBtn").addEventListener("click", () => {
+        pendingDeleteId = null;
+        closeModal(els.deleteModal);
+      });
+      document.getElementById("confirmDeleteBtn").addEventListener("click", () => {
+        if (pendingDeleteId) {
+          deleteButtonById(pendingDeleteId);
+          pendingDeleteId = null;
+          closeModal(els.deleteModal);
+          closeModal(els.editorModal);
+        }
+      });
+
+      els.groupForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const name = normalizeName(els.groupNameInput.value);
+        if (!name) return;
+        state.groups.push({ id: uid(), name });
+        saveState();
+        closeModal(els.groupModal);
+        showToast("Group saved.");
+        if (supabaseClient) syncToSupabase().catch(() => {});
+      });
+
+      let dragGroupId = null;
+
+      
+
+      els.editorForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const payload = {
+          id: els.buttonIdInput.value || uid(),
+          name: normalizeName(els.nameInput.value),
+          groupId: els.groupInput.value || "g-default",
+          text: els.textInput.value.trim(),
+          imageUrl: els.imageInput.value.trim(),
+          favorite: false,
+        };
+        if (!payload.name || !payload.text) return;
+        const index = state.buttons.findIndex(b => b.id === payload.id);
+        if (index >= 0) state.buttons[index] = payload;
+        else state.buttons.unshift(payload);
+        saveState();
+        closeModal(els.editorModal);
+        showToast("Button saved.");
+        if (supabaseClient) syncToSupabase().catch(() => {});
+      });
+
+      els.fileInput.addEventListener("change", async () => {
+        const file = els.fileInput.files?.[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          state.deviceId = parsed.deviceId || state.deviceId;
+          state.groups = Array.isArray(parsed.groups) && parsed.groups.length ? parsed.groups : defaultState(state.deviceId).groups;
+          state.buttons = Array.isArray(parsed.buttons) ? parsed.buttons : [];
+          saveState();
+          refreshCodeTools();
+          showToast("JSON imported.");
+          if (supabaseClient) syncToSupabase().catch(() => {});
+        } catch {
+          showToast("Could not read file.");
+        } finally {
+          els.fileInput.value = "";
+        }
+      });
+
+      document.addEventListener("click", (e) => {
+        const modal = [els.editorModal, els.groupModal, els.deleteModal, els.codeModal].find(m => m.classList.contains("open"));
+        if (modal && e.target === modal) closeModal(modal);
+      });
+
+      refreshCodeTools();
+      updateUI();
+      saveState();
+      if (currentSyncKey) {
+        loadFromSupabase(currentSyncKey).catch(() => {});
+      }
+    </script>
+  </body>
+</html>
+
+
+
+
