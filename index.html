@@ -50,12 +50,11 @@
       }
 
       .topbar {
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr auto;
         align-items: center;
-        justify-content: center;
         gap: 12px;
         margin-bottom: 14px;
-        position: relative;
         min-height: 52px;
       }
 
@@ -65,6 +64,8 @@
         font-weight: 900;
         letter-spacing: -0.04em;
         line-height: 0.95;
+        width: 100%;
+        text-align: left;
       }
 
       .subtle {
@@ -214,7 +215,8 @@
         line-height: 1.05;
         letter-spacing: -0.02em;
         margin: 0;
-        font-size: 16px;
+        font-size: 15px;
+        word-break: break-word;
       }
       .clip-group {
         color: var(--muted);
@@ -224,8 +226,9 @@
       }
       .clip-actions {
         display: flex;
-        justify-content: flex-end;
-        gap: 6px;
+        flex-direction: column;
+        gap: 4px;
+        flex-shrink: 0;
       }
       .clip-text {
         margin: 0;
@@ -855,6 +858,9 @@
           if (!grouped.has(groupId)) grouped.set(groupId, { id: groupId, name: "General", buttons: [] });
           grouped.get(groupId).buttons.push(btn);
         });
+        // Sort by favorite
+        state.buttons.sort((a, b) => (b.favorite === a.favorite ? 0 : b.favorite ? 1 : -1));
+
         const groups = Array.from(grouped.values()).filter(group => group.buttons.length);
 
         els.buttonsList.innerHTML = groups.map(group => `
@@ -1238,6 +1244,3 @@
     </script>
   </body>
 </html>
-
-
-
