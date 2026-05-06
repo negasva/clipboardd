@@ -1,1247 +1,1264 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#111317" />
-    <title>TattooShop Clipboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet" />
-    <script src="/env.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-      :root {
-        --bg: #0b0908;
-        --panel: #15100d;
-        --panel-2: #1b140f;
-        --line: rgba(255, 255, 255, 0.08);
-        --line-strong: rgba(255, 255, 255, 0.14);
-        --text: #f3ede7;
-        --muted: #aa9d91;
-        --accent: #f28b3c;
-        --accent-2: #d96f25;
-        --shadow: 0 18px 50px rgba(0, 0, 0, 0.38);
-        --radius: 16px;
-      }
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clipboard — copiar.online</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
-      * { box-sizing: border-box; }
-      html, body { height: 100%; }
-      body {
-        margin: 0;
-        font-family: Montserrat, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background:
-          radial-gradient(circle at top, rgba(242, 139, 60, 0.16), transparent 30%),
-          radial-gradient(circle at 90% 0%, rgba(217, 111, 37, 0.12), transparent 22%),
-          var(--bg);
-        color: var(--text);
-        -webkit-font-smoothing: antialiased;
-        text-rendering: geometricPrecision;
-      }
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
 
-      button, input, select, textarea {
-        font: inherit;
-      }
+<style>
+  :root {
+    --bg: #000000;
+    --surface: #0E0E10;
+    --surface-2: #161618;
+    --line: rgba(255,255,255,0.08);
+    --text: #FFFFFF;
+    --text-dim: rgba(255,255,255,0.55);
+    --accent: #3D2BFF;
+    --accent-soft: #5847FF;
+    --yellow: #F4F378;
+    --mint: #C9F27E;
+    --pink: #FF87C8;
+    --ink: #0A0A0B;
+    --radius: 28px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  body {
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(61,43,255,0.18), transparent 60%),
+      radial-gradient(900px 500px at 0% 30%, rgba(244,243,120,0.05), transparent 60%),
+      var(--bg);
+    min-height: 100vh;
+  }
+  ::selection { background: var(--accent); color: white; }
 
-      .app {
-        max-width: 1120px;
-        margin: 0 auto;
-        padding: calc(14px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom));
-      }
+  .display { font-family: 'Space Grotesk', sans-serif; font-weight: 600; letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
 
-      .topbar {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 14px;
-        min-height: 52px;
-      }
+  /* Card baseline */
+  .card {
+    position: relative;
+    border-radius: var(--radius);
+    padding: 24px;
+    overflow: hidden;
+    transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s;
+    will-change: transform;
+  }
+  .card:hover { transform: translateY(-3px); }
+  .card-tl { position: absolute; top: 22px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .card-bl { position: absolute; bottom: 22px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .card-title { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 15px; letter-spacing: 0.01em; }
 
-      .title {
-        margin: 0;
-        font-size: clamp(28px, 4vw, 42px);
-        font-weight: 900;
-        letter-spacing: -0.04em;
-        line-height: 0.95;
-        width: 100%;
-        text-align: left;
-      }
+  .icon-btn {
+    width: 38px; height: 38px;
+    border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.08);
+    color: inherit;
+    border: 0; cursor: pointer;
+    transition: background .2s, transform .2s;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.16); transform: scale(1.06); }
+  .icon-btn.dark { background: rgba(0,0,0,0.08); }
+  .icon-btn.dark:hover { background: rgba(0,0,0,0.16); }
 
-      .subtle {
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.3;
-      }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    color: var(--text-dim);
+    font-size: 11px; font-family: 'JetBrains Mono', monospace;
+    border: 1px solid var(--line);
+  }
 
-      .card {
-        background: rgba(21, 16, 13, 0.92);
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(16px);
-      }
+  /* Top bar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 28px;
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(14px);
+    background: rgba(0,0,0,0.55);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 600;
+    font-size: 18px; letter-spacing: -0.01em;
+  }
+  .brand-mark {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: var(--accent);
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px -6px rgba(61,43,255,0.7);
+  }
 
-      .toolbar {
-        padding: 12px;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-      }
+  .nav { display: flex; gap: 6px; align-items: center; }
+  .nav a {
+    color: var(--text-dim); font-size: 13px; font-weight: 500;
+    text-decoration: none; padding: 9px 14px; border-radius: 999px;
+    transition: color .2s, background .2s;
+  }
+  .nav a:hover { color: var(--text); background: rgba(255,255,255,0.06); }
 
-      .btn {
-        min-height: 48px;
-        border: 1px solid var(--line-strong);
-        border-radius: 14px;
-        background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-        color: var(--text);
-        padding: 0 14px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        cursor: pointer;
-        transition: transform .15s ease, border-color .15s ease, background .15s ease;
-      }
-      .btn:active { transform: translateY(1px) scale(0.99); }
-      .btn.primary {
-        background: linear-gradient(180deg, rgba(242, 139, 60, 0.32), rgba(217, 111, 37, 0.18));
-        border-color: rgba(242, 139, 60, 0.5);
-      }
-      .btn.ghost {
-        background: rgba(255,255,255,0.02);
-      }
+  .search {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--line);
+    min-width: 280px;
+  }
+  .search input {
+    background: transparent; border: 0; outline: 0;
+    color: var(--text); font: inherit; font-size: 13px;
+    flex: 1;
+  }
+  .search input::placeholder { color: var(--text-dim); }
+  .kbd {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 3px 6px; border-radius: 6px;
+    background: rgba(255,255,255,0.08);
+    color: var(--text-dim);
+    border: 1px solid var(--line);
+  }
 
-      .icon {
-        width: 18px;
-        height: 18px;
-        stroke: currentColor;
-        stroke-width: 2;
-        fill: none;
-        flex: 0 0 auto;
-      }
+  /* Hero */
+  .hero {
+    padding: 56px 28px 28px;
+    max-width: 1440px; margin: 0 auto;
+  }
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600; letter-spacing: -0.035em;
+    font-size: clamp(48px, 8vw, 112px);
+    line-height: 0.95;
+    margin: 0 0 24px;
+  }
+  .hero h1 .accent { color: var(--accent); }
+  .hero h1 em { font-style: italic; font-family: 'Space Grotesk', sans-serif; font-weight: 400; }
+  .hero-meta {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    margin-top: 8px;
+  }
 
-      .section {
-        padding: 14px;
-      }
+  .stats-row {
+    display: flex; gap: 28px; padding-top: 28px;
+    border-top: 1px solid var(--line); margin-top: 36px;
+    color: var(--text-dim); font-size: 12px;
+  }
+  .stat strong { color: var(--text); font-family: 'Space Grotesk', sans-serif; font-size: 22px; display:block; margin-bottom:4px; letter-spacing:-0.02em; }
 
-      .row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        align-items: center;
-        justify-content: space-between;
-      }
+  /* Bento grid */
+  .grid-wrap { padding: 16px 28px 80px; max-width: 1440px; margin: 0 auto; }
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 6px; margin-top: 22px;
+  }
+  .section-head h2 {
+    font-family: 'Space Grotesk', sans-serif; font-weight: 500;
+    font-size: 14px; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--text-dim); margin: 0;
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .section-head h2::before {
+    content: ""; width: 8px; height: 8px; border-radius: 999px; background: var(--accent);
+  }
+  .section-head .add {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--line);
+    color: var(--text); font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: background .2s;
+  }
+  .section-head .add:hover { background: rgba(255,255,255,0.1); }
 
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 40px;
-        padding: 0 12px;
-        border-radius: 999px;
-        border: 1px solid var(--line);
-        background: rgba(255,255,255,0.03);
-        color: var(--text);
-      }
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 16px;
+  }
+  .clip-card {
+    grid-column: span 4;
+    min-height: 260px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .clip-card.feature {
+    grid-column: span 6;
+    grid-row: span 2;
+    min-height: 540px;
+  }
+  .clip-card.wide { grid-column: span 8; }
+  .clip-card.half { grid-column: span 6; }
+  .clip-card.tall { grid-row: span 2; min-height: 540px; }
 
-      .pill input {
-        width: 1px;
-        min-width: 0;
-        flex: 1;
-        border: 0;
-        outline: 0;
-        background: transparent;
-        color: var(--text);
-      }
+  .clip-card.blue { background: var(--accent); color: white; border-color: transparent; }
+  .clip-card.yellow { background: var(--yellow); color: var(--ink); border-color: transparent; }
+  .clip-card.white { background: white; color: var(--ink); border-color: transparent; }
+  .clip-card.mint { background: var(--mint); color: var(--ink); border-color: transparent; }
+  .clip-card.pink { background: var(--pink); color: var(--ink); border-color: transparent; }
 
-      .groups {
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        padding-bottom: 2px;
-        scrollbar-width: none;
-      }
-      .groups::-webkit-scrollbar { display: none; }
+  .clip-headline {
+    font-family: 'Space Grotesk', sans-serif; font-weight: 600;
+    letter-spacing: -0.025em;
+    font-size: clamp(28px, 3.4vw, 56px);
+    line-height: 1.0;
+    margin-top: 56px;
+    text-wrap: balance;
+  }
+  .clip-card.feature .clip-headline { font-size: clamp(40px, 4.8vw, 84px); }
 
-      .group {
-        white-space: nowrap;
-        border: 1px solid var(--line);
-        background: rgba(255,255,255,0.03);
-        color: var(--text);
-        padding: 10px 12px;
-        border-radius: 999px;
-        cursor: pointer;
-        flex: 0 0 auto;
-      }
-      .meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        color: var(--muted);
-        font-size: 12px;
-      }
+  .clip-preview {
+    margin-top: 18px;
+    font-size: 13px;
+    line-height: 1.55;
+    opacity: 0.8;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .clip-card.feature .clip-preview { -webkit-line-clamp: 8; font-size: 14px; }
 
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-      }
+  .clip-meta-row { display: flex; gap: 8px; align-items: center; }
+  .clip-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; padding: 5px 9px; border-radius: 999px;
+    background: rgba(255,255,255,0.16);
+    color: inherit;
+  }
+  .clip-card.white .clip-tag, .clip-card.yellow .clip-tag, .clip-card.mint .clip-tag, .clip-card.pink .clip-tag {
+    background: rgba(0,0,0,0.08);
+  }
 
-      .clip-btn {
-        min-height: 126px;
-        border: 1px solid var(--line);
-        background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
-        border-radius: 16px;
-        padding: 12px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        gap: 12px;
-        text-align: left;
-        cursor: pointer;
-      }
-      .clip-btn.dragging { opacity: 0.45; }
-      .clip-btn:hover { border-color: rgba(255,255,255,0.16); }
+  .copy-burst {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+    opacity: 0; transform: scale(0.95);
+    transition: opacity .25s, transform .25s;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px);
+    color: white;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600; font-size: 22px; letter-spacing: -0.01em;
+    z-index: 5;
+  }
+  .clip-card.copied .copy-burst { opacity: 1; transform: scale(1); }
+  .copy-burst .check {
+    width: 56px; height: 56px; border-radius: 999px;
+    background: var(--mint); color: var(--ink);
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-right: 14px;
+  }
 
-      .clip-head {
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-        align-items: flex-start;
-      }
-      .clip-name {
-        font-weight: 700;
-        line-height: 1.05;
-        letter-spacing: -0.02em;
-        margin: 0;
-        font-size: 15px;
-        word-break: break-word;
-      }
-      .clip-group {
-        color: var(--muted);
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-      }
-      .clip-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        flex-shrink: 0;
-      }
-      .clip-text {
-        margin: 0;
-        color: rgba(237, 240, 244, 0.86);
-        font-size: 13px;
-        line-height: 1.35;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        min-height: 53px;
-      }
+  /* Decorative shapes (feature card) */
+  .deco {
+    position: absolute; pointer-events: none;
+    opacity: 0.55; mix-blend-mode: overlay;
+  }
+  .deco.dot {
+    width: 130px; height: 130px; border-radius: 999px;
+    background: rgba(255,255,255,0.85); top: 38%; left: 22%;
+  }
+  .deco.sq {
+    width: 110px; height: 110px;
+    background: rgba(255,255,255,0.85); top: 44%; right: 22%;
+    transform: rotate(18deg);
+  }
+  .deco.tri {
+    width: 0; height: 0; top: 56%; left: 38%;
+    border-left: 70px solid transparent;
+    border-right: 70px solid transparent;
+    border-bottom: 120px solid rgba(255,255,255,0.85);
+  }
 
-      .thumb {
-        width: 100%;
-        height: 72px;
-        object-fit: cover;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.08);
-        background: #0f1115;
-      }
+  /* Add card */
+  .add-card {
+    grid-column: span 4;
+    min-height: 260px;
+    background: transparent;
+    border: 1.5px dashed rgba(255,255,255,0.18);
+    color: var(--text-dim);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    cursor: pointer; transition: border-color .2s, color .2s, background .2s;
+    border-radius: var(--radius);
+  }
+  .add-card:hover { border-color: rgba(255,255,255,0.4); color: var(--text); background: rgba(255,255,255,0.02); }
+  .add-card .plus {
+    width: 48px; height: 48px; border-radius: 999px;
+    background: rgba(255,255,255,0.06); display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--line);
+  }
 
-      .small {
-        min-height: 38px;
-        padding: 0 12px;
-        border-radius: 12px;
-        font-size: 13px;
-      }
+  /* Editor modal */
+  .modal-bg {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0,0,0,0.8) !important;
+    backdrop-filter: blur(12px) !important;
+    z-index: 2147483647 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 24px;
+    animation: fadeIn .2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  .modal {
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    width: 100%; max-width: 640px;
+    padding: 28px;
+    animation: pop .25s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes pop { from { transform: scale(.96); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+  .modal h3 { font-family: 'Space Grotesk'; font-weight: 600; font-size: 22px; margin: 0 0 6px; letter-spacing: -0.02em; }
+  .modal p.sub { color: var(--text-dim); font-size: 13px; margin: 0 0 22px; }
+  .modal label { display: block; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 600; }
+  .modal input, .modal textarea, .modal select {
+    width: 100%; background: var(--bg); color: var(--text);
+    border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 14px; font: inherit; font-size: 14px;
+    margin-bottom: 16px; outline: 0;
+    transition: border-color .2s;
+  }
+  .modal input:focus, .modal textarea:focus, .modal select:focus { border-color: var(--accent); }
+  .modal textarea { min-height: 140px; resize: vertical; font-family: 'Inter'; }
+  .color-row { display: flex; gap: 10px; margin-bottom: 20px; }
+  .color-swatch {
+    width: 36px; height: 36px; border-radius: 12px; cursor: pointer;
+    border: 2px solid transparent; transition: transform .15s, border-color .15s;
+  }
+  .color-swatch:hover { transform: scale(1.1); }
+  .color-swatch.active { border-color: white; transform: scale(1.1); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+  .btn {
+    padding: 11px 18px; border-radius: 999px; border: 0; cursor: pointer;
+    font: inherit; font-size: 13px; font-weight: 600;
+    transition: background .2s, transform .15s;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-soft); }
+  .btn-ghost { background: rgba(255,255,255,0.06); color: var(--text); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+  .btn-danger { background: rgba(255,87,87,0.15); color: #ff8a8a; }
+  .btn-danger:hover { background: rgba(255,87,87,0.25); }
 
-      .empty {
-        padding: 30px 14px;
-        text-align: center;
-        color: var(--muted);
-        border: 1px dashed var(--line);
-        border-radius: 16px;
-        background: rgba(255,255,255,0.02);
-      }
+  /* Toast */
+  .toast-wrap {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    z-index: 200; display: flex; flex-direction: column; gap: 8px; align-items: center;
+    pointer-events: none;
+  }
+  .toast {
+    background: white; color: var(--ink);
+    padding: 12px 20px; border-radius: 999px;
+    font-weight: 600; font-size: 13px;
+    display: inline-flex; align-items: center; gap: 10px;
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);
+    animation: toastIn .3s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes toastIn { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+  .toast .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); }
 
-      .modal {
-        position: fixed;
-        inset: 0;
-        display: none;
-        align-items: flex-end;
-        justify-content: center;
-        padding: 12px;
-        background: rgba(0,0,0,0.5);
-        z-index: 50;
-      }
-      .modal.open { display: flex; }
-      .sheet {
-        width: min(100%, 720px);
-        max-height: 92vh;
-        overflow: auto;
-        border-radius: 24px;
-        background: #11151a;
-        border: 1px solid var(--line-strong);
-        box-shadow: var(--shadow);
-        padding: 16px;
-      }
-      .sheet h2 {
-        margin: 0 0 12px;
-        font-size: 24px;
-        letter-spacing: -0.04em;
-        line-height: 1;
-      }
-      .form {
-        display: grid;
-        gap: 12px;
-      }
-      .field {
-        display: grid;
-        gap: 6px;
-      }
-      .field label {
-        font-size: 12px;
-        color: var(--muted);
-      }
-      .field input, .field textarea, .field select {
-        width: 100%;
-        border-radius: 14px;
-        border: 1px solid var(--line);
-        background: #0b0d10;
-        color: var(--text);
-        padding: 13px 14px;
-        outline: none;
-      }
-      .field textarea { min-height: 110px; resize: vertical; }
-      .sheet-foot {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-        margin-top: 4px;
-      }
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .clip-card, .add-card { grid-column: span 6; }
+    .clip-card.feature { grid-column: span 12; min-height: 480px; }
+    .clip-card.wide, .clip-card.half { grid-column: span 12; }
+  }
+  @media (max-width: 720px) {
+    .topbar { padding: 16px; flex-wrap: wrap; gap: 10px; }
+    .search { min-width: 100%; order: 3; }
+    .nav { display: none; }
+    .hero { padding: 36px 16px 16px; }
+    .grid-wrap { padding: 8px 16px 60px; }
+    .clip-card, .add-card { grid-column: span 12; min-height: 220px; }
+    .clip-card.feature { min-height: 380px; }
+    .stats-row { gap: 18px; flex-wrap: wrap; }
+  }
 
-      .toast {
-        position: fixed;
-        left: 50%;
-        bottom: calc(16px + env(safe-area-inset-bottom));
-        transform: translateX(-50%);
-        background: rgba(17, 21, 26, 0.95);
-        border: 1px solid var(--line-strong);
-        color: var(--text);
-        padding: 12px 14px;
-        border-radius: 999px;
-        box-shadow: var(--shadow);
-        z-index: 60;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity .18s ease, transform .18s ease;
-        max-width: calc(100vw - 24px);
-        text-align: center;
-        font-size: 13px;
-      }
-      .toast.show {
-        opacity: 1;
-        transform: translateX(-50%) translateY(-3px);
-      }
+  /* Subtle animated noise on body */
+  body::before {
+    content: ""; position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' /></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.4' /></svg>");
+    opacity: 0.03; pointer-events: none; z-index: 1;
+  }
+  .stack > * { position: relative; z-index: 2; }
+</style>
+</head>
+<body>
+  <div id="app" class="stack"></div>
 
-      .topline {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-      }
+  <!-- TWEAKS PANEL SOURCE -->
+  <script type="text/babel">
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-body::-webkit-scrollbar{width:8px}
+  .twk-body::-webkit-scrollbar-track{background:transparent;margin:2px}
+  .twk-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px;
+    border:2px solid transparent;background-clip:content-box}
+  .twk-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25);
+    border:2px solid transparent;background-clip:content-box}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
 
-      .device-badge {
-        display: none;
-      }
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
 
-      .device-badge strong {
-        color: var(--text);
-        font-weight: 700;
-      }
+  .twk-field{appearance:none;width:100%;height:26px;padding:0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
+    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
+  select.twk-field{padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(0,0,0,.5)' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center}
 
-      .gear-btn {
-        min-height: 44px;
-        width: 44px;
-        padding: 0;
-      }
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
+    border-radius:999px;background:rgba(0,0,0,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#fff;
+    border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+    background:#fff;border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
 
-      .topgear {
-        position: absolute;
-        right: 0;
-        top: 0;
-      }
+  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;
+    background:rgba(0,0,0,.06);user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;
+    background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);
+    transition:left .15s cubic-bezier(.3,.7,.4,1),width .15s}
+  .twk-seg.dragging .twk-seg-thumb{transition:none}
+  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;
+    background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;
+    border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2;
+    overflow-wrap:anywhere}
 
-      .fab {
-        position: fixed;
-        right: 16px;
-        bottom: calc(16px + env(safe-area-inset-bottom));
-        z-index: 40;
-      }
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
 
-      
-      .fab-main {
-        width: 56px;
-        height: 56px;
-        border-radius: 18px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
+  .twk-num{display:flex;align-items:center;height:26px;padding:0 0 0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;background:rgba(255,255,255,.6)}
+  .twk-num-lbl{font-weight:500;color:rgba(41,38,27,.6);cursor:ew-resize;
+    user-select:none;padding-right:8px}
+  .twk-num input{flex:1;min-width:0;height:100%;border:0;background:transparent;
+    font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:0 8px 0 0;
+    outline:none;color:inherit;-moz-appearance:textfield}
+  .twk-num input::-webkit-inner-spin-button,.twk-num input::-webkit-outer-spin-button{
+    -webkit-appearance:none;margin:0}
+  .twk-num-unit{padding-right:8px;color:rgba(41,38,27,.45)}
 
-      .fab-menu {
-        position: absolute;
-        right: 0;
-        bottom: 64px;
-        display: none;
-        flex-direction: column;
-        gap: 8px;
-      }
+  .twk-btn{appearance:none;height:26px;padding:0 12px;border:0;border-radius:7px;
+    background:rgba(0,0,0,.78);color:#fff;font:inherit;font-weight:500;cursor:default}
+  .twk-btn:hover{background:rgba(0,0,0,.88)}
+  .twk-btn.secondary{background:rgba(0,0,0,.06);color:inherit}
+  .twk-btn.secondary:hover{background:rgba(0,0,0,.1)}
 
-      .fab.open .fab-menu { display: flex; }
+  .twk-swatch{appearance:none;-webkit-appearance:none;width:56px;height:22px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:6px;padding:0;cursor:default;
+    background:transparent;flex-shrink:0}
+  .twk-swatch::-webkit-color-swatch-wrapper{padding:0}
+  .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
+  .twk-swatch::-moz-color-swatch{border:0;border-radius:5.5px}
+`;
 
-      .fab-item {
-        min-width: 148px;
-        justify-content: flex-start;
-      }
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+  }, []);
+  return [values, setTweak];
+}
 
-      .modal-head {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 12px;
-      }
+function TweaksPanel({ title = 'Tweaks', children }) {
+  const [open, setOpen] = React.useState(true); // Always open in this demo unless hidden
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  const PAD = 16;
 
-      .section-title {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        margin-bottom: 12px;
-      }
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
+    offsetRef.current = {
+      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
 
-      .group-block {
-        margin-bottom: 10px;
-      }
+  React.useEffect(() => {
+    if (!open) return;
+    clampToViewport();
+    const ro = new ResizeObserver(clampToViewport);
+    ro.observe(document.documentElement);
+    return () => ro.disconnect();
+  }, [open, clampToViewport]);
 
-      .group-heading {
-        margin: 0 0 10px;
-        font-size: 16px;
-        letter-spacing: -0.03em;
-        font-weight: 700;
-      }
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = {
+        x: startRight - (ev.clientX - sx),
+        y: startBottom - (ev.clientY - sy),
+      };
+      clampToViewport();
+    };
+    const up = () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
 
-      .group-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-      }
-
-      .code-tools {
-        display: grid;
-        gap: 10px;
-      }
-
-      .code-preview {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        border: 1px solid var(--line);
-        background: rgba(255,255,255,0.03);
-        border-radius: 14px;
-        padding: 10px 12px;
-      }
-
-      .code-preview strong {
-        letter-spacing: 0.16em;
-        font-size: 16px;
-      }
-
-      .code-qr {
-        width: 104px;
-        height: 104px;
-        border-radius: 12px;
-        border: 1px solid var(--line);
-        background: #fff;
-        overflow: hidden;
-        flex: 0 0 auto;
-      }
-
-      .code-qr img {
-        display: block;
-        width: 100%;
-        height: 100%;
-      }
-
-      .mini-note {
-        color: var(--muted);
-        font-size: 11px;
-        line-height: 1.25;
-      }
-
-      .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--muted);
-        display: inline-block;
-      }
-
-      .status-dot.live { background: #63d17e; }
-      .status-dot.offline { background: #d6a15c; }
-
-      .group-drag {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 10px;
-      }
-
-      .drag-handle {
-        width: 34px;
-        height: 34px;
-        border-radius: 10px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid var(--line);
-        background: rgba(255,255,255,0.03);
-        cursor: grab;
-        flex: 0 0 auto;
-      }
-
-      .drag-handle:active { cursor: grabbing; }
-
-      @media (min-width: 760px) {
-        .modal { align-items: center; }
-        .sheet { padding: 18px; }
-        .grid { gap: 12px; }
-        .clip-btn { min-height: 140px; }
-      }
-
-      @media (max-width: 420px) {
-        .toolbar { grid-template-columns: 1fr 1fr; }
-        .grid { gap: 8px; }
-        .clip-btn { min-height: 118px; padding: 10px; }
-        .title { font-size: 30px; }
-      }
-    </style>
-  </head>
-  <body>
-    <main class="app">
-      <div class="topbar">
-        <div class="topline">
-          <h1 class="title">TattooShop Clipboard</h1>
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" data-noncommentable=""
+           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" onClick={() => setOpen(false)}>✕</button>
         </div>
-        <button class="btn ghost gear-btn topgear" id="codeSettingsBtn" type="button" aria-label="Code settings">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a7.9 7.9 0 0 0 .1-1l2-1.5-2-3.5-2.4.5a7.6 7.6 0 0 0-.8-.6l-.3-2.4H10l-.3 2.4a7.6 7.6 0 0 0-.8.6L6.5 9 4.5 12.5l2 1.5a7.9 7.9 0 0 0 .1 1 7.9 7.9 0 0 0-.1 1l-2 1.5 2 3.5 2.4-.5a7.6 7.6 0 0 0 .8.6l.3 2.4h5.4l.3-2.4a7.6 7.6 0 0 0 .8-.6l2.4.5 2-3.5-2-1.5a7.9 7.9 0 0 0-.1-1Z"/></svg>
+        <div className="twk-body">{children}</div>
+      </div>
+    </>
+  );
+}
+
+function TweakSection({ title, children }) {
+  return (
+    <>
+      <div className="twk-sect">{title}</div>
+      {children}
+    </>
+  );
+}
+
+function TweakRow({ label, value, children, inline = false }) {
+  return (
+    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
+      <div className="twk-lbl">
+        <span>{label}</span>
+        {value != null && <span className="twk-val">{value}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
+  return (
+    <TweakRow label={label} value={`${value}${unit}`}>
+      <input type="range" className="twk-slider" min={min} max={max} step={step}
+             value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </TweakRow>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
+              onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakRadio({ label, value, options, onChange }) {
+  const trackRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
+  const idx = Math.max(0, opts.findIndex((o) => o.value === value));
+  const n = opts.length;
+
+  const segAt = (clientX) => {
+    const r = trackRef.current.getBoundingClientRect();
+    const inner = r.width - 4;
+    const i = Math.floor(((clientX - r.left - 2) / inner) * n);
+    return opts[Math.max(0, Math.min(n - 1, i))].value;
+  };
+
+  const onPointerDown = (e) => {
+    setDragging(true);
+    const v0 = segAt(e.clientX);
+    onChange(v0);
+    const move = (ev) => {
+      if (!trackRef.current) return;
+      const v = segAt(ev.clientX);
+      onChange(v);
+    };
+    const up = () => {
+      setDragging(false);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  return (
+    <TweakRow label={label}>
+      <div ref={trackRef} onPointerDown={onPointerDown}
+           className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
+        <div className="twk-seg-thumb"
+             style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
+                      width: `calc((100% - 4px) / ${n})` }} />
+        {opts.map((o) => (
+          <button key={o.value} type="button">
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakColor({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <input type="color" className="twk-swatch" value={value}
+             onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
+function TweakButton({ onClick, children }) {
+  return (
+    <button type="button" className="twk-btn" onClick={onClick}>{children}</button>
+  );
+}
+  </script>
+
+  <div id="app" class="stack"></div>
+
+  <!-- APP SOURCE -->
+  <script type="text/babel">
+const { useState, useEffect, useRef, useMemo } = React;
+
+// ============ Icons ============
+const Icon = {
+  Copy: (p) => <svg {...p} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
+  Check: (p) => <svg {...p} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  Star: ({ filled, ...p }) => <svg {...p} width="16" height="16" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  Edit: (p) => <svg {...p} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>,
+  Trash: (p) => <svg {...p} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>,
+  Plus: (p) => <svg {...p} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  Search: (p) => <svg {...p} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  Arrow: (p) => <svg {...p} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+  Down: (p) => <svg {...p} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>,
+  Up: (p) => <svg {...p} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>,
+  Left: (p) => <svg {...p} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+  Right: (p) => <svg {...p} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+  Settings: (p) => <svg {...p} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.36.16.69.4 1 .69V12a2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+  Folder: (p) => <svg {...p} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>,
+  Download: (p) => <svg {...p} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  Upload: (p) => <svg {...p} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
+};
+
+const TWEAK_DEFAULTS = {
+  "accent": "#3D2BFF",
+  "density": "comfy",
+  "showShapes": true,
+  "headlineFont": "Space Grotesk"
+};
+
+const SEED = [
+  {
+    section: "Atajos rápidos", items: [
+      { id: "1", title: "Saludo cliente", color: "blue", size: "feature", tags: ["ventas", "es"], content: "¡Hola! Hablas con Nicolás de Tattoo Shop Colombia 👋\n\n¿En qué te puedo ayudar hoy? Estoy disponible para resolver dudas sobre kits, máquinas y envíos a todo el país. Cuéntame qué estás buscando y te armo la mejor opción 🚀", showShapes: true },
+      { id: "2", title: "Email firma", color: "white", size: "normal", tags: ["email"], content: "Saludos cordiales,\n\nNicolás Pérez\nDirector Comercial — Tattoo Shop\nnicolas@tattooshop.co\n+57 320 555 1234" },
+      { id: "3", title: "Política devolución", color: "default", size: "normal", tags: ["legal"], content: "Aceptamos devoluciones dentro de los 30 días posteriores a la compra. El producto debe estar sin uso y en su empaque original. Reembolso al método de pago original en 5–7 días hábiles." },
+    ]
+  },
+  {
+    section: "Productos", items: [
+      { id: "4", title: "Kit Yilong", color: "yellow", size: "half", tags: ["kit", "popular"], content: "🎯 Kit Yilong inalámbrico — Para todo tipo de tatuaje\n\n• 1× Máquina Yilong inalámbrica\n• Carga con USB tipo C\n• 2× Batería inalámbrica\n• Duración: 6h continuas\n\n💰 $1.890.000 COP" },
+      { id: "5", title: "EZ Lancer", color: "default", size: "normal", tags: ["kit"], content: "🎯 Máquina EZ Lancer — Línea profesional\n\n• Motor coreless de 11W\n• Stroke ajustable 2.5–4mm\n• Carga USB-C inalámbrica\n• Bateria 2200mAh\n\n💰 $2.450.000 COP" },
+      { id: "6", title: "Poseidon Clear", color: "mint", size: "normal", tags: ["kit", "nuevo"], content: "✨ Máquina Poseidon Clear — Edición transparente\n\n• Diseño semi-translúcido\n• Stroke 3.5mm fijo\n• Ideal para sombreado\n• Garantía 1 año\n\n💰 $2.100.000 COP" },
+      { id: "7", title: "ES Caster", color: "default", size: "normal", tags: ["kit"], content: "🎯 Máquina EZ Caster — Para todo tipo de tatuaje\n\n• Stroke variable\n• 2× Batería inalámbrica de larga duración\n• Carga USB tipo C\n• Estuche rígido\n\n💰 $1.690.000 COP" },
+    ]
+  },
+  {
+    section: "Información", items: [
+      { id: "8", title: "Guía Inter", color: "pink", size: "half", tags: ["envíos"], content: "📦 ¡Muchas gracias por tu pedido! 👀\n\n👉 Rastrea tu pedido aquí: https://interrapidisimo.com\n📞 Número de guía: ————\n⚠️ Importante: mantente pendiente de las notificaciones y actualizaciones." },
+      { id: "9", title: "Horario tienda", color: "default", size: "normal", tags: ["info"], content: "🕒 Horario de atención\n\nLun–Vie: 9:00 a 19:00\nSáb: 10:00 a 17:00\nDom: cerrado\n\n📍 Cra 13 #45-67, Bogotá" },
+    ]
+  }
+];
+
+const HERO_DEFAULT = {
+  line1: "Copia. Pega.",
+  line2: "Sin fricción."
+};
+const SHOW_SHAPES = true;
+
+function App() {
+  const [data, setData] = useState(() => {
+    try {
+      const saved = localStorage.getItem("clipboard-data-v2");
+      return saved ? JSON.parse(saved) : SEED;
+    } catch { return SEED; }
+  });
+  const [favorites, setFavorites] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("clipboard-favs-v2") || "[]"); } catch { return []; }
+  });
+  const [hero, setHero] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("clipboard-hero-v1") || JSON.stringify(HERO_DEFAULT)); } catch { return HERO_DEFAULT; }
+  });
+  const [search, setSearch] = useState("");
+  const [editing, setEditing] = useState(null); 
+  const [copiedId, setCopiedId] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [isEditingHero, setIsEditingHero] = useState(false);
+
+  useEffect(() => { localStorage.setItem("clipboard-data-v2", JSON.stringify(data)); }, [data]);
+  useEffect(() => { localStorage.setItem("clipboard-favs-v2", JSON.stringify(favorites)); }, [favorites]);
+  useEffect(() => { localStorage.setItem("clipboard-hero-v1", JSON.stringify(hero)); }, [hero]);
+
+  const handleExport = () => {
+    const exportData = { data, favorites, hero, timestamp: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `clipboard-export-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    setToast({ msg: "Datos exportados correctamente", ts: Date.now() });
+    setTimeout(() => setToast(null), 2000);
+  };
+
+  const handleImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const imported = JSON.parse(ev.target.result);
+        if (imported.data) setData(imported.data);
+        if (imported.favorites) setFavorites(imported.favorites);
+        if (imported.hero) setHero(imported.hero);
+        setToast({ msg: "Datos importados con éxito", ts: Date.now() });
+        setTimeout(() => setToast(null), 2000);
+      } catch (err) {
+        alert("Error al importar el archivo. Asegúrate de que sea un JSON válido.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleCopy = async (item) => {
+    try {
+      await navigator.clipboard.writeText(item.content);
+    } catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = item.content; document.body.appendChild(ta);
+      ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+    }
+    setCopiedId(item.id);
+    setTimeout(() => setCopiedId(null), 1200);
+    setToast({ msg: `Copiado: ${item.title}`, ts: Date.now() });
+    setTimeout(() => setToast(null), 1800);
+  };
+
+  const toggleFav = (id) => {
+    setFavorites((f) => {
+      const isFav = f.includes(id);
+      const newFavs = isFav ? f.filter(x => x !== id) : [...f, id];
+      
+      if (!isFav) {
+        // Automatically promote to top of its section
+        setData(prev => prev.map(section => {
+          const idx = section.items.findIndex(it => it.id === id);
+          if (idx > -1) {
+            const items = [...section.items];
+            const [item] = items.splice(idx, 1);
+            items.unshift(item);
+            return { ...section, items };
+          }
+          return section;
+        }));
+      }
+      return newFavs;
+    });
+  };
+
+  const moveSection = (idx, dir) => {
+    setData(prev => {
+      const nd = [...prev];
+      const nIdx = idx + dir;
+      if (nIdx < 0 || nIdx >= nd.length) return prev;
+      [nd[idx], nd[nIdx]] = [nd[nIdx], nd[idx]];
+      return nd;
+    });
+  };
+
+  const moveItem = (sIdx, iIdx, dir) => {
+    setData(prev => {
+      const nd = prev.map(s => ({ ...s, items: [...s.items] }));
+      const nIdx = iIdx + dir;
+      if (nIdx < 0 || nIdx >= nd[sIdx].items.length) return prev;
+      [nd[sIdx].items[iIdx], nd[sIdx].items[nIdx]] = [nd[sIdx].items[nIdx], nd[sIdx].items[iIdx]];
+      return nd;
+    });
+  };
+
+  const saveItem = (newItem, ctx) => {
+    const { sectionTitle, ...itemData } = newItem;
+    setData(d => {
+      let nd = d.map(s => ({ ...s, items: [...s.items] }));
+      
+      // Find or create target section
+      let targetSectionIdx = nd.findIndex(s => s.section === sectionTitle);
+      if (targetSectionIdx === -1) {
+        nd.push({ section: sectionTitle, items: [] });
+        targetSectionIdx = nd.length - 1;
+      }
+
+      if (ctx.new) {
+        const idStr = "n" + Date.now();
+        nd[targetSectionIdx].items.push({ ...itemData, id: idStr });
+      } else {
+        // If section changed, move item
+        if (targetSectionIdx !== ctx.sectionIdx) {
+          const item = nd[ctx.sectionIdx].items[ctx.itemIdx];
+          nd[ctx.sectionIdx].items.splice(ctx.itemIdx, 1);
+          nd[targetSectionIdx].items.push({ ...item, ...itemData });
+        } else {
+          nd[ctx.sectionIdx].items[ctx.itemIdx] = { ...nd[ctx.sectionIdx].items[ctx.itemIdx], ...itemData };
+        }
+      }
+      
+      // Clean up empty sections (except maybe the first one or if you want to keep them)
+      // nd = nd.filter(s => s.items.length > 0 || s.section === "Atajos rápidos");
+      
+      return nd;
+    });
+  };
+
+  const deleteItem = (ctx) => {
+    setData(d => {
+      const nd = d.map(s => ({ ...s, items: [...s.items] }));
+      nd[ctx.sectionIdx].items.splice(ctx.itemIdx, 1);
+      return nd;
+    });
+  };
+
+  const filteredData = useMemo(() => {
+    if (!search.trim()) return data;
+    const q = search.toLowerCase();
+    return data.map(s => ({
+      ...s,
+      items: s.items.filter(it =>
+        it.title.toLowerCase().includes(q) ||
+        it.content.toLowerCase().includes(q) ||
+        (it.tags || []).some(t => t.toLowerCase().includes(q))
+      )
+    })).filter(s => s.items.length > 0);
+  }, [data, search]);
+
+  const totalItems = data.reduce((acc, s) => acc + s.items.length, 0);
+
+  return (
+    <>
+      <TopBar search={search} setSearch={setSearch} onExport={handleExport} onImport={handleImport} />
+      <Hero 
+        totalItems={totalItems} 
+        sectionsCount={data.length} 
+        favCount={favorites.length} 
+        hero={hero}
+        onUpdateHero={(updates) => setHero(prev => ({ ...prev, ...updates }))}
+      />
+
+      <div className="grid-wrap">
+        {filteredData.map((section, sIdx) => (
+          <div key={section.section}>
+            <div className="section-head">
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <h2 className="display">{section.section} <span className="pill">{section.items.length}</span></h2>
+                <div style={{ display: "flex", gap: "4px" }}>
+                  <button className="icon-btn" onClick={() => moveSection(sIdx, -1)} disabled={sIdx === 0} style={{ opacity: sIdx === 0 ? 0.3 : 1 }}>
+                    <Icon.Up style={{ width: 14, height: 14 }} />
+                  </button>
+                  <button className="icon-btn" onClick={() => moveSection(sIdx, 1)} disabled={sIdx === data.length - 1} style={{ opacity: sIdx === data.length - 1 ? 0.3 : 1 }}>
+                    <Icon.Down style={{ width: 14, height: 14 }} />
+                  </button>
+                </div>
+              </div>
+              <button className="add" onClick={() => setEditing({ new: true, sectionIdx: data.findIndex(x => x.section === section.section) })}>
+                <Icon.Plus /> Añadir
+              </button>
+            </div>
+            <div className="bento">
+              {section.items.map((item, iIdx) => {
+                const realSectionIdx = data.findIndex(x => x.section === section.section);
+                const realIdx = data[realSectionIdx].items.findIndex(x => x.id === item.id);
+                return (
+                  <ClipCard
+                    key={item.id}
+                    item={item}
+                    isFav={favorites.includes(item.id)}
+                    isCopied={copiedId === item.id}
+                    onCopy={() => handleCopy(item)}
+                    onFav={() => toggleFav(item.id)}
+                    onEdit={() => setEditing({ sectionIdx: realSectionIdx, itemIdx: realIdx, item })}
+                    onMove={(dir) => moveItem(realSectionIdx, realIdx, dir)}
+                    isFirst={iIdx === 0}
+                    isLast={iIdx === section.items.length - 1}
+                    showShapes={SHOW_SHAPES}
+                  />
+                );
+              })}
+              {sIdx === 0 && !search && (
+                <div className="add-card" onClick={() => setEditing({ new: true, sectionIdx: 0 })}>
+                  <div className="plus"><Icon.Plus /></div>
+                  <div style={{ fontSize: 13, fontWeight: 500 }}>Crear nuevo bloque</div>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        {filteredData.length === 0 && (
+          <div style={{ textAlign: "center", padding: "80px 20px", color: "var(--text-dim)" }}>
+            <div className="display" style={{ fontSize: 32, color: "white", marginBottom: 8 }}>Sin resultados</div>
+            <div>Intenta con otra palabra o crea un nuevo bloque.</div>
+          </div>
+        )}
+      </div>
+
+      {editing && (
+        <Editor
+          ctx={editing}
+          onSave={(item) => { saveItem(item, editing); setEditing(null); }}
+          onDelete={() => { deleteItem(editing); setEditing(null); }}
+          onClose={() => setEditing(null)}
+          sections={data.map(s => s.section)}
+        />
+      )}
+
+      {toast && (
+        <div className="toast-wrap">
+          <div className="toast"><span className="dot"></span>{toast.msg}</div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function TopBar({ search, setSearch, onExport, onImport }) {
+  const fileInputRef = useRef(null);
+
+  return (
+    <div className="topbar">
+      <div className="brand display">
+        <div className="brand-mark">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+        </div>
+        copiar.online
+      </div>
+      <div className="search">
+        <Icon.Search style={{ color: "var(--text-dim)" }} />
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar bloques, etiquetas..." />
+        <span className="kbd">⌘K</span>
+      </div>
+      <div className="nav">
+        <button className="btn btn-ghost" onClick={onExport} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <Icon.Download /> Exportar
+        </button>
+        <button className="btn btn-ghost" onClick={() => fileInputRef.current.click()} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <Icon.Upload /> Importar
+        </button>
+        <input type="file" ref={fileInputRef} onChange={onImport} accept=".json" style={{ display: "none" }} />
+        <a href="#" style={{ color: "white", background: "var(--accent)", marginLeft: "8px" }}>Ingresar</a>
+      </div>
+    </div>
+  );
+}
+
+function Hero({ totalItems, sectionsCount, favCount, hero, onUpdateHero }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [line1, setLine1] = useState(hero.line1);
+  const [line2, setLine2] = useState(hero.line2);
+
+  const handleSave = () => {
+    onUpdateHero({ line1, line2 });
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="hero">
+      {!isEditing ? (
+        <div style={{ position: "relative", cursor: "pointer" }} onClick={() => setIsEditing(true)} title="Haz clic para editar el encabezado">
+          <h1 className="display">
+            {hero.line1}<br />
+            <em>{hero.line2}</em> <span className="accent">→</span>
+          </h1>
+          <button className="icon-btn" style={{ position: "absolute", top: 0, right: 0, opacity: 0.2 }}>
+            <Icon.Edit />
+          </button>
+        </div>
+      ) : (
+        <div style={{ background: "rgba(255,255,255,0.03)", padding: "24px", borderRadius: "24px", marginBottom: "24px", border: "1px solid var(--line)" }}>
+          <label style={{ display: "block", fontSize: "11px", color: "var(--text-dim)", marginBottom: "8px" }}>LÍNEA 1</label>
+          <input className="display" value={line1} onChange={(e) => setLine1(e.target.value)} style={{ background: "transparent", border: "0", borderBottom: "1px solid var(--accent)", color: "white", fontSize: "32px", width: "100%", outline: "0", marginBottom: "16px" }} />
+          <label style={{ display: "block", fontSize: "11px", color: "var(--text-dim)", marginBottom: "8px" }}>LÍNEA 2 (CURSIVA)</label>
+          <input className="display" value={line2} onChange={(e) => setLine2(e.target.value)} style={{ background: "transparent", border: "0", borderBottom: "1px solid var(--accent)", color: "white", fontSize: "32px", width: "100%", outline: "0", fontStyle: "italic" }} />
+          <div style={{ marginTop: "24px", display: "flex", gap: "10px" }}>
+            <button className="btn btn-primary" onClick={handleSave}>Guardar Encabezado</button>
+            <button className="btn btn-ghost" onClick={() => { setLine1(hero.line1); setLine2(hero.line2); setIsEditing(false); }}>Cancelar</button>
+          </div>
+        </div>
+      )}
+      <div className="hero-meta">
+        <span className="pill"><span style={{ width: 6, height: 6, borderRadius: 999, background: "var(--mint)" }}></span>Sincronizado</span>
+        <span className="pill">Tu portapapeles · público</span>
+        <span className="pill">v 4.2</span>
+      </div>
+      <div className="stats-row">
+        <div className="stat"><strong>{totalItems}</strong>Bloques</div>
+        <div className="stat"><strong>{sectionsCount}</strong>Categorías</div>
+        <div className="stat"><strong>{favCount}</strong>Favoritos</div>
+      </div>
+    </div>
+  );
+}
+
+function ClipCard({ item, isFav, isCopied, onCopy, onFav, onEdit, onMove, isFirst, isLast, showShapes }) {
+  const sizeClass = item.size || "normal";
+  const colorClass = item.color === "default" ? "" : item.color;
+  const isLight = ["yellow", "white", "mint", "pink"].includes(item.color);
+  const arrowColor = isLight ? "dark" : "";
+
+  return (
+    <div className={`clip-card card ${sizeClass} ${colorClass} ${isCopied ? "copied" : ""}`} onClick={onCopy}>
+      <div className="card-tl">
+        <span className="card-title display">{item.title}</span>
+        <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ display: "flex", background: "rgba(0,0,0,0.1)", borderRadius: "999px", padding: "2px" }}>
+            <button className={`icon-btn ${arrowColor}`} style={{ width: 28, height: 28 }} onClick={(e) => { e.stopPropagation(); onMove(-1); }} disabled={isFirst} title="Mover izquierda">
+              <Icon.Left style={{ width: 12, height: 12, opacity: isFirst ? 0.2 : 1 }} />
+            </button>
+            <button className={`icon-btn ${arrowColor}`} style={{ width: 28, height: 28 }} onClick={(e) => { e.stopPropagation(); onMove(1); }} disabled={isLast} title="Mover derecha">
+              <Icon.Right style={{ width: 12, height: 12, opacity: isLast ? 0.2 : 1 }} />
+            </button>
+          </div>
+          <button className={`icon-btn ${arrowColor}`} onClick={(e) => { e.stopPropagation(); onFav(); }} title="Favorito">
+            <Icon.Star filled={isFav} />
+          </button>
+          <button className={`icon-btn ${arrowColor}`} onClick={(e) => { e.stopPropagation(); onEdit(); }} title="Editar">
+            <Icon.Edit />
+          </button>
+        </div>
+      </div>
+
+      {item.size === "feature" && showShapes && (
+        <>
+          <div className="deco dot"></div>
+          <div className="deco sq"></div>
+          <div className="deco tri"></div>
+        </>
+      )}
+
+      <div className="clip-headline display">{item.size === "feature" ? item.content.split('\n')[0] : null}</div>
+      <div className="clip-preview">{item.content}</div>
+
+      <div className="card-bl">
+        <div className="clip-meta-row">
+          {(item.tags || []).map(t => <span key={t} className="clip-tag mono">{t}</span>)}
+        </div>
+        <button className={`icon-btn ${arrowColor}`}>
+          {item.size === "feature" ? <Icon.Down /> : <Icon.Arrow />}
         </button>
       </div>
 
-      <section class="card section">
-        <div id="buttonsList"></div>
-        <div id="emptyState" class="empty" hidden>
-          No buttons yet. Create your first copy button.
-        </div>
-      </section>
-    </main>
+      <div className="copy-burst display">
+        <span className="check"><Icon.Check /></span>
+        ¡Copiado!
+      </div>
+    </div>
+  );
+}
 
-    <div class="modal" id="editorModal" aria-hidden="true">
-      <div class="sheet">
-        <div class="modal-head">
-          <h2 id="editorTitle">Create button</h2>
-          <button type="button" class="btn ghost gear-btn" id="closeEditorBtn" aria-label="Close editor">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
-          </button>
-        </div>
-        <form class="form" id="editorForm">
-          <div class="field">
-            <label for="nameInput">Name</label>
-            <input id="nameInput" required maxlength="80" placeholder="Paste reply" />
+function Editor({ ctx, onSave, onDelete, onClose, sections }) {
+  const seed = ctx.new ? { title: "", content: "", color: "default", size: "normal", tags: [] } : ctx.item;
+  const initialSection = !ctx.new ? sections[ctx.sectionIdx] : (sections[ctx.sectionIdx] || sections[0]);
+  
+  const [title, setTitle] = useState(seed.title);
+  const [content, setContent] = useState(seed.content);
+  const [color, setColor] = useState(seed.color);
+  const [size, setSize] = useState(seed.size);
+  const [tagsStr, setTagsStr] = useState((seed.tags || []).join(", "));
+  const [sectionTitle, setSectionTitle] = useState(initialSection);
+  const [isNewSection, setIsNewSection] = useState(false);
+  const [customSection, setCustomSection] = useState("");
+
+  const colors = [
+    { id: "default", v: "#161618" },
+    { id: "blue", v: "#3D2BFF" },
+    { id: "yellow", v: "#F4F378" },
+    { id: "white", v: "#FFFFFF" },
+    { id: "mint", v: "#C9F27E" },
+    { id: "pink", v: "#FF87C8" },
+  ];
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  const handleSave = () => {
+    const finalSection = isNewSection ? customSection.trim() : sectionTitle;
+    if (!finalSection) { alert("Por favor elige o crea una categoría"); return; }
+    if (!title.trim() || !content.trim()) { alert("Falta título o contenido"); return; }
+    
+    onSave({ 
+      title: title.trim(), 
+      content: content.trim(), 
+      color, 
+      size, 
+      tags: tagsStr.split(',').map(t => t.trim()).filter(Boolean),
+      sectionTitle: finalSection
+    });
+  };
+
+  return ReactDOM.createPortal(
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h3 className="display">{ctx.new ? "Nuevo bloque" : "Editar bloque"}</h3>
+        <p className="sub">Configura tu atajo de portapapeles.</p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+          <div>
+            <label>Título</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ej. Saludo Cliente" />
           </div>
-          <div class="field">
-            <label for="templateInput">Template</label>
-            <select id="templateInput">
-              <option value="">Blank</option>
-              <option value="greeting">Greeting</option>
-              <option value="pricing">Pricing</option>
-              <option value="aftercare">Aftercare</option>
-              <option value="booking">Booking follow-up</option>
+          <div>
+            <label>Categoría</label>
+            {!isNewSection ? (
+              <div style={{ display: "flex", gap: "8px" }}>
+                <select style={{ flex: 1 }} value={sectionTitle} onChange={(e) => setSectionTitle(e.target.value)}>
+                  {sections.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <button className="btn btn-ghost" style={{ padding: "0 12px" }} onClick={() => setIsNewSection(true)}>+</button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input style={{ flex: 1 }} value={customSection} onChange={(e) => setCustomSection(e.target.value)} placeholder="Nueva categoría..." autoFocus />
+                <button className="btn btn-ghost" style={{ padding: "0 12px" }} onClick={() => setIsNewSection(false)}>✕</button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <label>Contenido a copiar</label>
+        <textarea 
+          value={content} 
+          onChange={(e) => setContent(e.target.value)} 
+          placeholder="Pega aquí el texto que se copiará al portapapeles..." 
+        />
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+          <div>
+            <label>Etiquetas (separadas por coma)</label>
+            <input value={tagsStr} onChange={(e) => setTagsStr(e.target.value)} placeholder="ventas, ayuda, etc" />
+          </div>
+          <div>
+            <label>Tamaño de tarjeta</label>
+            <select value={size} onChange={(e) => setSize(e.target.value)}>
+              <option value="normal">Normal</option>
+              <option value="half">Mediano (1/2)</option>
+              <option value="wide">Ancho (2/3)</option>
+              <option value="feature">Destacado (Grande)</option>
             </select>
           </div>
-          <div class="field">
-            <label for="groupInput">Group</label>
-            <select id="groupInput"></select>
-          </div>
-          <div class="field">
-            <label for="textInput">Text</label>
-            <textarea id="textInput" required placeholder="Text to copy"></textarea>
-          </div>
-          <div class="field">
-            <label for="imageInput">Add image url</label>
-            <input id="imageInput" placeholder="https://..." />
-          </div>
-          <input type="hidden" id="buttonIdInput" />
-          <div class="sheet-foot">
-            <button type="button" class="btn ghost" id="cancelEditorBtn">Cancel</button>
-            <button type="submit" class="btn primary" id="saveButtonBtn">Save button</button>
-          </div>
-          <div class="sheet-foot">
-            <button type="button" class="btn ghost" id="duplicateButtonBtn">Duplicate</button>
-            <button type="button" class="btn ghost" id="deleteButtonBtn">Delete</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div class="modal" id="groupModal" aria-hidden="true">
-      <div class="sheet">
-        <h2>Create group</h2>
-        <form class="form" id="groupForm">
-          <div class="field">
-            <label for="groupNameInput">Group name</label>
-            <input id="groupNameInput" required maxlength="40" placeholder="Favorites" />
-          </div>
-          <div class="sheet-foot">
-            <button type="button" class="btn ghost" id="cancelGroupBtn">Cancel</button>
-            <button type="submit" class="btn primary">Save group</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div class="modal" id="deleteModal" aria-hidden="true">
-      <div class="sheet" style="max-width: 420px;">
-        <div class="modal-head">
-          <h2>Delete button</h2>
-          <button type="button" class="btn ghost gear-btn" id="closeDeleteBtn" aria-label="Close delete dialog">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
-          </button>
         </div>
-        <div class="form">
-          <div class="mini-note" style="font-size: 13px; color: var(--text);">
-            Delete this button?
-          </div>
-          <div class="mini-note">This action cannot be undone.</div>
-          <div class="sheet-foot">
-            <button type="button" class="btn ghost" id="cancelDeleteBtn">Cancel</button>
-            <button type="button" class="btn primary" id="confirmDeleteBtn">Delete</button>
-          </div>
+
+        <label>Color de fondo</label>
+        <div className="color-row">
+          {colors.map(c => (
+            <div key={c.id} className={`color-swatch ${color === c.id ? "active" : ""}`}
+              style={{ background: c.v, border: c.id === 'default' ? '1px solid var(--line)' : 'none' }} 
+              onClick={() => setColor(c.id)} />
+          ))}
+        </div>
+
+        <div className="modal-actions">
+          {!ctx.new && <button className="btn btn-danger" onClick={onDelete}>Eliminar</button>}
+          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className="btn btn-primary" onClick={handleSave}>Guardar bloque</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
+  );
+}
 
-    <div class="modal" id="codeModal" aria-hidden="true">
-      <div class="sheet">
-        <div class="modal-head">
-          <h2>Code settings</h2>
-          <button type="button" class="btn ghost gear-btn" id="closeCodeBtn" aria-label="Close code settings">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
-          </button>
-        </div>
-        <div class="form">
-          <div class="code-preview">
-            <div>
-              <div class="mini-note">Sync key</div>
-              <strong id="codePreview">--------</strong>
-            </div>
-            <button type="button" class="btn small" id="copyCodeBtn">Copy</button>
-          </div>
-          <div class="code-preview" style="align-items: center;">
-            <div class="mini-note" style="max-width: 170px;">QR preview for quick transfer to another device.</div>
-            <div class="code-qr"><img id="codeQrImg" alt="QR code preview" /></div>
-          </div>
-          <div class="field">
-            <label for="manualCodeInput">Enter sync key directly</label>
-            <textarea id="manualCodeInput" placeholder="Paste sync key here"></textarea>
-          </div>
-          <div class="field">
-            <label for="codeText">Portable session data</label>
-            <textarea id="codeText" readonly></textarea>
-          </div>
-          <div class="sheet-foot">
-            <button type="button" class="btn ghost" id="loadManualCodeBtn">Load code</button>
-            <button type="button" class="btn primary" id="generateCodeBtn">Generate code</button>
-          </div>
-          <div class="code-preview">
-            <div class="mini-note"><span class="status-dot" id="syncStatusDot"></span> <span id="syncStatusText">Local only</span></div>
-            <button type="button" class="btn small" id="syncNowBtn">Sync now</button>
-          </div>
-          <div class="sheet-foot">
-            <button type="button" class="btn ghost" id="downloadJsonBtn">Export JSON</button>
-            <label class="btn ghost" for="fileInput" style="cursor:pointer;">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M4 7V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2h-4"/><path d="M14 3v6h6"/><path d="M12 11v10"/><path d="M8 17l4 4 4-4"/></svg>
-              Upload JSON
-            </label>
-          </div>
-          <input id="fileInput" type="file" accept="application/json,.json" hidden />
-        </div>
-      </div>
-    </div>
-
-    <div class="toast" id="toast"></div>
-
-    <div class="fab" id="fab">
-      <div class="fab-menu" id="fabMenu">
-        <button class="btn ghost fab-item" id="fabGroupBtn" type="button"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Create group</button>
-        <button class="btn ghost fab-item" id="fabButtonBtn" type="button"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Create button</button>
-      </div>
-      <button class="btn primary fab-main" id="fabToggleBtn" type="button" aria-label="Open create menu">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-      </button>
-    </div>
-
-    <script>
-      const STORAGE_KEY = "tattooshop-clipboard-state";
-      const DEVICE_KEY = "tattooshop-clipboard-device-id";
-      const SYNC_KEY = "tattooshop-clipboard-sync-key";
-      const SUPABASE_URL = window.APP_CONFIG?.SUPABASE_URL || "";
-      const SUPABASE_ANON_KEY = window.APP_CONFIG?.SUPABASE_ANON_KEY || "";
-      const SUPABASE_TABLE = window.APP_CONFIG?.SUPABASE_TABLE || "clipboard_sessions";
-      const supabaseClient = (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY)
-        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-        : null;
-
-      const els = {
-        buttonsList: document.getElementById("buttonsList"),
-        emptyState: document.getElementById("emptyState"),
-        groupInput: document.getElementById("groupInput"),
-        fileInput: document.getElementById("fileInput"),
-        editorModal: document.getElementById("editorModal"),
-        groupModal: document.getElementById("groupModal"),
-        deleteModal: document.getElementById("deleteModal"),
-        codeModal: document.getElementById("codeModal"),
-        editorForm: document.getElementById("editorForm"),
-        groupForm: document.getElementById("groupForm"),
-        editorTitle: document.getElementById("editorTitle"),
-        nameInput: document.getElementById("nameInput"),
-        templateInput: document.getElementById("templateInput"),
-        textInput: document.getElementById("textInput"),
-        imageInput: document.getElementById("imageInput"),
-        buttonIdInput: document.getElementById("buttonIdInput"),
-        groupNameInput: document.getElementById("groupNameInput"),
-        codePreview: document.getElementById("codePreview"),
-        codeText: document.getElementById("codeText"),
-        manualCodeInput: document.getElementById("manualCodeInput"),
-        codeQrImg: document.getElementById("codeQrImg"),
-        syncStatusDot: document.getElementById("syncStatusDot"),
-        syncStatusText: document.getElementById("syncStatusText"),
-        toast: document.getElementById("toast"),
-      };
-      const state = loadState();
-      let currentSessionCode = "";
-      let currentSyncKey = localStorage.getItem(SYNC_KEY) || "";
-      let pendingDeleteId = null;
-
-      function uid() {
-        return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
-      }
-
-      function getDeviceId() {
-        let id = localStorage.getItem(DEVICE_KEY);
-        if (!id) {
-          id = "device_" + uid();
-          localStorage.setItem(DEVICE_KEY, id);
-        }
-        return id;
-      }
-
-      function defaultState(deviceId) {
-        return {
-          version: 1,
-          deviceId,
-          groups: [{ id: "g-default", name: "General" }],
-          buttons: [],
-        };
-      }
-
-      function loadState() {
-        const deviceId = getDeviceId();
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) return defaultState(deviceId);
-          const parsed = JSON.parse(raw);
-          return {
-            ...defaultState(deviceId),
-            ...parsed,
-            deviceId,
-            groups: Array.isArray(parsed.groups) && parsed.groups.length ? parsed.groups : defaultState(deviceId).groups,
-            buttons: Array.isArray(parsed.buttons) ? parsed.buttons : [],
-          };
-        } catch {
-          return defaultState(deviceId);
-        }
-      }
-
-      function saveState() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        updateUI();
-      }
-
-      function showToast(message) {
-        els.toast.textContent = message;
-        els.toast.classList.add("show");
-        clearTimeout(showToast.timer);
-        showToast.timer = setTimeout(() => els.toast.classList.remove("show"), 1700);
-      }
-
-      function openModal(modal) {
-        modal.classList.add("open");
-        modal.setAttribute("aria-hidden", "false");
-      }
-      function closeModal(modal) {
-        modal.classList.remove("open");
-        modal.setAttribute("aria-hidden", "true");
-      }
-
-      function encodeSession(data) {
-        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-        let out = "";
-        const seed = JSON.stringify(data) + Date.now().toString(36);
-        for (let i = 0; i < 8; i++) {
-          const code = seed.charCodeAt(i % seed.length) + i * 17;
-          out += chars[code % chars.length];
-        }
-        return out;
-      }
-
-      function decodeSession(code) {
-        const raw = code.trim();
-        if (!raw) throw new Error("Empty input");
-        try {
-          return JSON.parse(raw);
-        } catch {
-          const stored = localStorage.getItem(`${STORAGE_KEY}:code:${raw}`);
-          if (stored) return JSON.parse(stored);
-          throw new Error("Unknown code");
-        }
-      }
-
-      function copyText(text) {
-        if (navigator.clipboard && window.isSecureContext) {
-          return navigator.clipboard.writeText(text);
-        }
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        document.execCommand("copy");
-        ta.remove();
-        return Promise.resolve();
-      }
-
-      function normalizeName(name) {
-        return String(name || "").trim();
-      }
-
-      function updateGroupOptions(selectedId = "g-default") {
-        els.groupInput.innerHTML = state.groups.map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join("");
-        els.groupInput.value = selectedId;
-      }
-
-      function escapeHtml(str) {
-        return String(str).replace(/[&<>"']/g, s => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[s]));
-      }
-
-      function renderButtons() {
-        const grouped = new Map();
-        state.groups.forEach(group => grouped.set(group.id, { ...group, buttons: [] }));
-        state.buttons.forEach(btn => {
-          const groupId = btn.groupId && grouped.has(btn.groupId) ? btn.groupId : "g-default";
-          if (!grouped.has(groupId)) grouped.set(groupId, { id: groupId, name: "General", buttons: [] });
-          grouped.get(groupId).buttons.push(btn);
-        });
-        // Sort by favorite
-        state.buttons.sort((a, b) => (b.favorite === a.favorite ? 0 : b.favorite ? 1 : -1));
-
-        const groups = Array.from(grouped.values()).filter(group => group.buttons.length);
-
-        els.buttonsList.innerHTML = groups.map(group => `
-          <section class="group-block">
-            <div class="group-drag" data-group-header="${group.id}" draggable="true">
-              <button class="drag-handle" type="button" aria-label="Drag group ${escapeHtml(group.name)}">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M9 5h2M13 5h2M9 12h2M13 12h2M9 19h2M13 19h2"/></svg>
-              </button>
-              <h3 class="group-heading" style="margin:0;">${escapeHtml(group.name)}</h3>
-            </div>
-            <div class="group-grid">
-              ${group.buttons.map(btn => `
-                <article class="clip-btn" data-id="${btn.id}" draggable="true">
-                  <div class="clip-head">
-                    <div>
-                      <h4 class="clip-name">${escapeHtml(btn.name)}${btn.favorite ? " *" : ""}</h4>
-                    </div>
-                    <div class="clip-actions">
-                      <button class="btn small edit-btn" data-fav="${btn.id}" type="button" aria-label="Favorite ${escapeHtml(btn.name)}">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="m12 17.3-6.18 3.25 1.18-6.89-5-4.87 6.91-1L12 1.5l3.09 6.27 6.91 1-5 4.87 1.18 6.89z"/></svg>
-                      </button>
-                      <button class="btn small edit-btn" data-edit="${btn.id}" type="button" aria-label="Edit ${escapeHtml(btn.name)}">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16v4Z"/><path d="M13 7l4 4"/></svg>
-                      </button>
-                    </div>
-                  </div>
-                  ${btn.imageUrl ? `<img class="thumb" src="${escapeHtml(btn.imageUrl)}" alt="${escapeHtml(btn.name)}">` : ""}
-                  <p class="clip-text">${escapeHtml(btn.text)}</p>
-                </article>
-              `).join("")}
-            </div>
-          </section>
-        `).join("");
-        els.emptyState.hidden = groups.length > 0;
-        updateGroupOptions();
-      }
-
-      function updateUI() {
-        renderButtons();
-        updateGroupOptions();
-      }
-
-      const templates = {
-        greeting: "Hi! Thanks for reaching out. How can I help you today?",
-        pricing: "Here is the current pricing:\n\n- Small: \n- Medium: \n- Large: ",
-        aftercare: "Aftercare:\n\n- Keep it clean\n- Avoid soaking\n- Use recommended ointment",
-        booking: "Thanks for the message. If you'd like to book, send your preferred date and design idea.",
-      };
-
-      function openEditor(button = null) {
-        els.editorForm.reset();
-        els.templateInput.value = "";
-        const deleteBtn = document.getElementById("deleteButtonBtn");
-        const duplicateBtn = document.getElementById("duplicateButtonBtn");
-        if (button) {
-          els.editorTitle.textContent = "Edit button";
-          els.nameInput.value = button.name;
-          els.textInput.value = button.text;
-          els.imageInput.value = button.imageUrl || "";
-          els.buttonIdInput.value = button.id;
-          updateGroupOptions(button.groupId);
-          deleteBtn.dataset.buttonId = button.id;
-          duplicateBtn.dataset.buttonId = button.id;
-        } else {
-          els.editorTitle.textContent = "Create button";
-          els.buttonIdInput.value = "";
-          updateGroupOptions("g-default");
-          delete deleteBtn.dataset.buttonId;
-          delete duplicateBtn.dataset.buttonId;
-        }
-        openModal(els.editorModal);
-      }
-
-      function deleteButtonById(id) {
-        const index = state.buttons.findIndex(b => b.id === id);
-        if (index >= 0) {
-          state.buttons.splice(index, 1);
-          saveState();
-          showToast("Button deleted.");
-        }
-      }
-
-      els.templateInput?.addEventListener("change", () => {
-        const preset = templates[els.templateInput.value];
-        if (preset) els.textInput.value = preset;
-      });
-
-      function openGroupCreator() {
-        els.groupForm.reset();
-        openModal(els.groupModal);
-      }
-
-      function makePortableSnapshot() {
-        return {
-          version: state.version,
-          deviceId: state.deviceId,
-          groups: state.groups,
-          buttons: state.buttons,
-          exportedAt: new Date().toISOString(),
-        };
-      }
-
-      function normalizeButtons() {
-        return;
-      }
-
-      function refreshCodeTools() {
-        const snapshot = makePortableSnapshot();
-        if (!currentSyncKey) {
-          currentSyncKey = encodeSession(snapshot);
-          localStorage.setItem(SYNC_KEY, currentSyncKey);
-        }
-        currentSessionCode = currentSyncKey;
-        els.codePreview.textContent = currentSyncKey;
-        els.codeText.value = JSON.stringify(snapshot, null, 2);
-        els.codeQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=0&data=${encodeURIComponent(currentSyncKey)}`;
-        localStorage.setItem(`${STORAGE_KEY}:code:${currentSyncKey}`, JSON.stringify(snapshot));
-        els.syncStatusDot.className = `status-dot ${supabaseClient ? "live" : "offline"}`;
-        els.syncStatusText.textContent = supabaseClient ? "Supabase sync ready" : "Local only";
-      }
-
-      async function syncToSupabase() {
-        if (!supabaseClient || !currentSyncKey) {
-          showToast("Supabase is not configured yet.");
-          return;
-        }
-        const snapshot = makePortableSnapshot();
-        const payload = {
-          sync_key: currentSyncKey,
-          payload: snapshot,
-          updated_at: new Date().toISOString(),
-        };
-        const { error } = await supabaseClient.from(SUPABASE_TABLE).upsert(payload, { onConflict: "sync_key" });
-        if (error) throw error;
-        showToast("Synced to Supabase.");
-      }
-
-      async function loadFromSupabase(syncKey) {
-        if (!supabaseClient || !syncKey) return false;
-        const { data, error } = await supabaseClient
-          .from(SUPABASE_TABLE)
-          .select("payload")
-          .eq("sync_key", syncKey)
-          .maybeSingle();
-        if (error || !data?.payload) return false;
-        const payload = data.payload;
-        state.deviceId = payload.deviceId || state.deviceId;
-        state.groups = Array.isArray(payload.groups) && payload.groups.length ? payload.groups : defaultState(state.deviceId).groups;
-        state.buttons = Array.isArray(payload.buttons) ? payload.buttons : [];
-        saveState();
-        return true;
-      }
-
-      document.getElementById("codeSettingsBtn").addEventListener("click", () => {
-        refreshCodeTools();
-        openModal(els.codeModal);
-      });
-      document.getElementById("closeCodeBtn").addEventListener("click", () => closeModal(els.codeModal));
-      document.getElementById("loadManualCodeBtn").addEventListener("click", () => {
-        const raw = els.manualCodeInput.value.trim();
-        if (!raw) return;
-        try {
-          currentSyncKey = raw;
-          localStorage.setItem(SYNC_KEY, currentSyncKey);
-          refreshCodeTools();
-          loadFromSupabase(currentSyncKey).then(found => {
-            closeModal(els.codeModal);
-            showToast(found ? "Code loaded." : "Sync key saved.");
-          });
-        } catch {
-          showToast("Could not load that code.");
-        }
-      });
-      document.getElementById("downloadJsonBtn").addEventListener("click", () => {
-        const blob = new Blob([JSON.stringify(makePortableSnapshot(), null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `tattooshop-clipboard-${state.deviceId}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast("Export started.");
-      });
-      document.getElementById("generateCodeBtn").addEventListener("click", async () => {
-        refreshCodeTools();
-        await copyText(currentSessionCode).catch(() => {});
-        showToast("Session code generated and copied.");
-      });
-      document.getElementById("syncNowBtn").addEventListener("click", async () => {
-        try {
-          refreshCodeTools();
-          await syncToSupabase();
-        } catch (error) {
-          showToast("Supabase sync failed.");
-        }
-      });
-      document.getElementById("fabToggleBtn").addEventListener("click", () => {
-        document.getElementById("fab").classList.toggle("open");
-      });
-      document.getElementById("fabGroupBtn").addEventListener("click", () => {
-        document.getElementById("fab").classList.remove("open");
-        openGroupCreator();
-      });
-      document.getElementById("fabButtonBtn").addEventListener("click", () => {
-        document.getElementById("fab").classList.remove("open");
-        openEditor();
-      });
-      document.getElementById("cancelEditorBtn").addEventListener("click", () => closeModal(els.editorModal));
-      document.getElementById("closeEditorBtn").addEventListener("click", () => closeModal(els.editorModal));
-      document.getElementById("cancelGroupBtn").addEventListener("click", () => closeModal(els.groupModal));
-      document.getElementById("copyCodeBtn").addEventListener("click", async () => {
-        await copyText(currentSessionCode);
-        showToast("Code copied.");
-      });
-      document.getElementById("deleteButtonBtn").addEventListener("click", () => {
-        const id = document.getElementById("deleteButtonBtn").dataset.buttonId;
-        if (!id) return;
-        pendingDeleteId = id;
-        openModal(els.deleteModal);
-      });
-      document.getElementById("duplicateButtonBtn").addEventListener("click", () => {
-        const id = document.getElementById("duplicateButtonBtn").dataset.buttonId;
-        const btn = state.buttons.find(b => b.id === id);
-        if (!btn) return;
-        if (confirm("Duplicate this button?")) {
-          state.buttons.unshift({
-            ...btn,
-            id: uid(),
-            name: `${btn.name} copy`,
-          });
-          saveState();
-          showToast("Button duplicated.");
-        }
-      });
-
-      els.buttonsList.addEventListener("click", async (e) => {
-        const edit = e.target.closest("[data-edit]");
-        const fav = e.target.closest("[data-fav]");
-        if (fav) {
-          const btn = state.buttons.find(b => b.id === fav.dataset.fav);
-          if (btn) {
-            btn.favorite = !btn.favorite;
-            normalizeButtons();
-            saveState();
-          }
-          return;
-        }
-        if (edit) {
-          const btn = state.buttons.find(b => b.id === edit.dataset.edit);
-          if (btn) openEditor(btn);
-          return;
-        }
-        const card = e.target.closest("[data-id]");
-        if (!card) return;
-        const btn = state.buttons.find(b => b.id === card.dataset.id);
-        if (!btn) return;
-        await copyText(btn.text);
-        showToast(`Copied ${btn.name}.`);
-      });
-
-      let dragButtonId = null;
-      els.buttonsList.addEventListener("dragstart", (e) => {
-        const card = e.target.closest(".clip-btn");
-        if (!card) return;
-        dragButtonId = card.dataset.id;
-        card.classList.add("dragging");
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", dragButtonId);
-      });
-
-      els.buttonsList.addEventListener("dragover", (e) => {
-        const card = e.target.closest(".clip-btn");
-        if (!card || !dragButtonId) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "move";
-      });
-
-      els.buttonsList.addEventListener("drop", (e) => {
-        const card = e.target.closest(".clip-btn");
-        if (!card || !dragButtonId) return;
-        e.preventDefault();
-        const targetId = card.dataset.id;
-        if (targetId === dragButtonId) return;
-        const from = state.buttons.findIndex(b => b.id === dragButtonId);
-        const to = state.buttons.findIndex(b => b.id === targetId);
-        if (from < 0 || to < 0) return;
-        const moved = state.buttons.splice(from, 1)[0];
-        state.buttons.splice(to, 0, moved);
-        dragButtonId = null;
-        saveState();
-      });
-
-      document.addEventListener("dragend", () => {
-        dragButtonId = null;
-        document.querySelectorAll(".clip-btn.dragging").forEach(el => el.classList.remove("dragging"));
-      });
-
-      document.getElementById("cancelDeleteBtn").addEventListener("click", () => {
-        pendingDeleteId = null;
-        closeModal(els.deleteModal);
-      });
-      document.getElementById("closeDeleteBtn").addEventListener("click", () => {
-        pendingDeleteId = null;
-        closeModal(els.deleteModal);
-      });
-      document.getElementById("confirmDeleteBtn").addEventListener("click", () => {
-        if (pendingDeleteId) {
-          deleteButtonById(pendingDeleteId);
-          pendingDeleteId = null;
-          closeModal(els.deleteModal);
-          closeModal(els.editorModal);
-        }
-      });
-
-      els.groupForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const name = normalizeName(els.groupNameInput.value);
-        if (!name) return;
-        state.groups.push({ id: uid(), name });
-        saveState();
-        closeModal(els.groupModal);
-        showToast("Group saved.");
-        if (supabaseClient) syncToSupabase().catch(() => {});
-      });
-
-      let dragGroupId = null;
-
-      
-
-      els.editorForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const payload = {
-          id: els.buttonIdInput.value || uid(),
-          name: normalizeName(els.nameInput.value),
-          groupId: els.groupInput.value || "g-default",
-          text: els.textInput.value.trim(),
-          imageUrl: els.imageInput.value.trim(),
-          favorite: false,
-        };
-        if (!payload.name || !payload.text) return;
-        const index = state.buttons.findIndex(b => b.id === payload.id);
-        if (index >= 0) state.buttons[index] = payload;
-        else state.buttons.unshift(payload);
-        saveState();
-        closeModal(els.editorModal);
-        showToast("Button saved.");
-        if (supabaseClient) syncToSupabase().catch(() => {});
-      });
-
-      els.fileInput.addEventListener("change", async () => {
-        const file = els.fileInput.files?.[0];
-        if (!file) return;
-        try {
-          const text = await file.text();
-          const parsed = JSON.parse(text);
-          state.deviceId = parsed.deviceId || state.deviceId;
-          state.groups = Array.isArray(parsed.groups) && parsed.groups.length ? parsed.groups : defaultState(state.deviceId).groups;
-          state.buttons = Array.isArray(parsed.buttons) ? parsed.buttons : [];
-          saveState();
-          refreshCodeTools();
-          showToast("JSON imported.");
-          if (supabaseClient) syncToSupabase().catch(() => {});
-        } catch {
-          showToast("Could not read file.");
-        } finally {
-          els.fileInput.value = "";
-        }
-      });
-
-      document.addEventListener("click", (e) => {
-        const modal = [els.editorModal, els.groupModal, els.deleteModal, els.codeModal].find(m => m.classList.contains("open"));
-        if (modal && e.target === modal) closeModal(modal);
-      });
-
-      refreshCodeTools();
-      updateUI();
-      saveState();
-      if (currentSyncKey) {
-        loadFromSupabase(currentSyncKey).catch(() => {});
-      }
-    </script>
-  </body>
+const container = document.getElementById('app');
+const root = ReactDOM.createRoot(container);
+root.render(<App />);
+  </script>
+</body>
 </html>

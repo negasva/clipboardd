@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Craftsmen</title>
+  <style>
+    :root {
+      --bg: #000000;
+      --card-blue: #3416f7;
+      --card-white: #f8f8f6;
+      --card-dark: #1f1f22;
+      --card-yellow: #f7ec6c;
+      --ink: #ffffff;
+      --text-dark: #111111;
+      --radius: 48px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; min-height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow: hidden;
+    }
+
+    .page {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: minmax(180px, 1fr) minmax(0, 1.25fr);
+      padding: 0 14px 14px;
+      gap: 10px;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 2vh;
+    }
+
+    .brand {
+      text-align: center;
+      line-height: 0.88;
+      letter-spacing: -0.06em;
+      color: #fff;
+      user-select: none;
+    }
+
+    .brand .tiny {
+      display: block;
+      font-size: clamp(28px, 3.8vw, 36px);
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .brand .big {
+      display: block;
+      font-size: clamp(58px, 8.2vw, 106px);
+      font-weight: 800;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.9fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 14px;
+      min-height: 0;
+    }
+
+    .tile {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      min-width: 0;
+      min-height: 0;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
+    }
+
+    .tile.blue {
+      background: var(--card-blue);
+      grid-row: 1 / span 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 42px 42px 36px;
+    }
+    .tile.white {
+      background: var(--card-white);
+      color: var(--text-dark);
+      padding: 34px 38px 32px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+    .tile.dark {
+      background: var(--card-dark);
+      padding: 34px 38px 32px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+    .tile.yellow {
+      background: var(--card-yellow);
+      color: var(--text-dark);
+      grid-column: 2 / span 2;
+      padding: 34px 38px 30px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+
+    .eyebrow {
+      font-size: clamp(22px, 2vw, 30px);
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      color: rgba(255,255,255,0.95);
+    }
+    .eyebrow.dark {
+      color: #111;
+    }
+
+    .title-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 118px;
+      padding: 0 26px;
+      font-size: clamp(80px, 7vw, 136px);
+      font-weight: 700;
+      line-height: 0.86;
+      letter-spacing: -0.08em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+      color: #ffffff;
+      pointer-events: none;
+    }
+
+    .shape-ring {
+      position: absolute;
+      left: 22%;
+      bottom: 30%;
+      width: 122px;
+      height: 122px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      filter: blur(0.2px);
+    }
+    .shape-square {
+      position: absolute;
+      left: 48%;
+      bottom: 26%;
+      width: 108px;
+      height: 108px;
+      background: rgba(255,255,255,0.5);
+      transform: rotate(18deg);
+      border-radius: 2px;
+    }
+    .shape-triangle {
+      position: absolute;
+      left: 39%;
+      bottom: 13%;
+      width: 0;
+      height: 0;
+      border-left: 82px solid transparent;
+      border-right: 82px solid transparent;
+      border-bottom: 140px solid rgba(255,255,255,0.44);
+      transform: rotate(14deg);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .icon-badge {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+    .icon-badge.white { background: #fff; }
+    .icon-badge.dark { background: #fff; }
+
+    .icon {
+      width: 42px;
+      height: 42px;
+      stroke: currentColor;
+      stroke-width: 1.9;
+      fill: none;
+    }
+
+    .mini-label {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.05em;
+      line-height: 1;
+    }
+
+    .mini-icon {
+      width: 34px;
+      height: 34px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      fill: none;
+      flex: 0 0 auto;
+    }
+
+    .bottom-link {
+      position: absolute;
+      left: 38px;
+      right: 38px;
+      bottom: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 21px;
+      font-weight: 600;
+      letter-spacing: -0.05em;
+      color: inherit;
+    }
+
+    .arrow {
+      width: 34px;
+      height: 34px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      fill: none;
+      flex: 0 0 auto;
+    }
+
+    .white .mini-label,
+    .dark .mini-label,
+    .yellow .mini-label {
+      color: inherit;
+    }
+
+    .white .mini-icon,
+    .dark .mini-icon,
+    .yellow .mini-icon {
+      color: inherit;
+    }
+
+    @media (max-width: 1100px) {
+      body { overflow: auto; }
+      .page {
+        height: auto;
+        min-height: 100vh;
+        grid-template-rows: auto auto;
+        padding-bottom: 16px;
+      }
+      .grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+      }
+      .tile.blue {
+        grid-column: 1 / -1;
+        grid-row: auto;
+        min-height: 56vh;
+      }
+      .tile.yellow { grid-column: 1 / -1; min-height: 28vh; }
+    }
+
+    @media (max-width: 700px) {
+      .page { padding: 0 10px 10px; gap: 8px; }
+      .brand-wrap { padding-top: 5vh; }
+      .grid { grid-template-columns: 1fr; }
+      .tile.blue,
+      .tile.white,
+      .tile.dark,
+      .tile.yellow {
+        grid-column: auto;
+        min-height: 220px;
+        padding: 28px 24px;
+        border-radius: 36px;
+      }
+      .title-line { bottom: 96px; font-size: 64px; white-space: normal; }
+      .shape-ring { width: 88px; height: 88px; }
+      .shape-square { width: 84px; height: 84px; }
+      .shape-triangle { border-left-width: 58px; border-right-width: 58px; border-bottom-width: 100px; }
+      .bottom-link { left: 24px; right: 24px; bottom: 22px; font-size: 18px; }
+      .icon-badge { width: 64px; height: 64px; }
+      .mini-label { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="brand-wrap" aria-label="The Craftsmen">
+      <div class="brand">
+        <span class="tiny">THE</span>
+        <span class="big">Craftsmen</span>
+      </div>
+    </section>
+
+    <section class="grid" aria-label="Cards">
+      <article class="tile blue">
+        <div class="card-top">
+          <div class="eyebrow">Craft CMS</div>
+          <div class="icon-badge white" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" style="color:#111">
+              <path d="M12.8 4.4c-3.3.2-5.9 2.3-6.8 5.4-1 3.3.1 6.8 2.7 9 2.1 1.8 4.9 2.3 7.4 1.5-2.9.5-5.8-.7-7.6-3.1-1.7-2.3-1.9-5.5-.5-8 .9-1.7 2.4-3 4.2-3.8z"/>
+              <path d="M14.5 7.2c-2.1 0-3.7 1.1-4.5 2.8-.7 1.5-.6 3.3.3 4.7.8 1.4 2.2 2.3 3.8 2.5-1.7-.9-2.7-2.7-2.5-4.7.2-1.9 1.6-3.5 3.5-4.1.2-.1.1-1.2-.6-1.2z"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="title-line">CMS. We are specialists</div>
+
+        <div>
+          <div class="shape-ring"></div>
+          <div class="shape-square"></div>
+          <div class="shape-triangle"></div>
+        </div>
+
+        <div class="bottom-link">
+          <span>See our services</span>
+          <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 4v14"/>
+            <path d="M6 12l6 6 6-6"/>
+          </svg>
+        </div>
+      </article>
+
+      <article class="tile white">
+        <div class="mini-label">Work</div>
+        <svg class="mini-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 6h16v12H4z"/>
+          <path d="M7 10h10"/>
+          <path d="M8 14h2"/>
+          <path d="M13 14h3"/>
+        </svg>
+      </article>
+
+      <article class="tile dark">
+        <div class="mini-label">About us</div>
+        <svg class="mini-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 5h7v7H4z"/>
+          <path d="M13 5h7v7h-7z"/>
+          <path d="M4 14h7v7H4z"/>
+          <path d="M13 14h7v7h-7z"/>
+        </svg>
+      </article>
+
+      <article class="tile yellow">
+        <div class="mini-label">Contact us</div>
+        <svg class="mini-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12h12"/>
+          <path d="M12 7l5 5-5 5"/>
+        </svg>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

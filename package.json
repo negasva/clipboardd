@@ -1,0 +1,13 @@
+{
+  "name": "tattooshop-clipboard",
+  "version": "1.0.0",
+  "description": "Tattooshop Clipboard App",
+  "main": "index.html",
+  "scripts": {
+    "start": "node scripts/generate-env.mjs && npx serve .",
+    "build": "node scripts/generate-env.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

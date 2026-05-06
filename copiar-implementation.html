@@ -1,0 +1,360 @@
+
+<!doctype html>
+<html lang="en">
+<head><script>(function(){
+  function makeStore(){
+    var data = {};
+    var api = {
+      getItem: function(k){ return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
+      setItem: function(k, v){ data[k] = String(v); },
+      removeItem: function(k){ delete data[k]; },
+      clear: function(){ data = {}; },
+      key: function(i){ return Object.keys(data)[i] || null; }
+    };
+    Object.defineProperty(api, 'length', { get: function(){ return Object.keys(data).length; } });
+    return api;
+  }
+  function tryShim(name){
+    var works = false;
+    try { works = !!window[name] && typeof window[name].getItem === 'function'; void window[name].length; }
+    catch (_) { works = false; }
+    if (works) return;
+    try { Object.defineProperty(window, name, { configurable: true, value: makeStore() }); }
+    catch (_) { try { window[name] = makeStore(); } catch (__) {} }
+  }
+  tryShim('localStorage');
+  tryShim('sessionStorage');
+})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clipboard — copiar.online</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      background: #000000;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      font-size: 14px;
+      color: #888;
+    }
+
+    .nav-links a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .nav-links a:hover { color: #fff; }
+
+    /* Bento grid */
+    .bento {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 20px;
+    }
+
+    /* Card base */
+    .card {
+      border-radius: 48px;
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover { transform: translateY(-4px); }
+
+    /* Hero card - large purple */
+    .card-hero {
+      grid-row: span 2;
+      background: #3D2BFF;
+      color: #fff;
+      min-height: 500px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-hero h1 {
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      max-width: 400px;
+    }
+
+    .hero-visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      position: relative;
+    }
+
+    .hero-circle {
+      width: 120px;
+      height: 120px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 50%;
+      position: absolute;
+    }
+
+    .hero-square {
+      width: 80px;
+      height: 80px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 12px;
+      transform: rotate(18deg);
+      position: absolute;
+      left: 55%;
+    }
+
+    /* Small cards row */
+    .cards-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    /* White card */
+    .card-white {
+      background: #ffffff;
+      color: #000;
+      min-height: 200px;
+    }
+
+    .card-white h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .card-white p {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    /* Dark card */
+    .card-dark {
+      background: #161618;
+      color: #fff;
+      min-height: 200px;
+    }
+
+    .card-dark h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .card-dark p {
+      font-size: 14px;
+      color: #888;
+      line-height: 1.5;
+    }
+
+    /* Yellow card - full width */
+    .card-yellow {
+      background: #F4F378;
+      color: #000;
+      grid-column: span 1;
+      min-height: 180px;
+    }
+
+    .card-yellow h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .card-yellow p {
+      font-size: 14px;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    /* Copy button */
+    .copy-btn {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      border: none;
+      background: rgba(0,0,0,0.1);
+      color: inherit;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .card-hero .copy-btn,
+    .card-dark .copy-btn {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .copy-btn:hover {
+      background: rgba(0,0,0,0.2);
+    }
+
+    .card-hero .copy-btn:hover,
+    .card-dark .copy-btn:hover {
+      background: rgba(255,255,255,0.25);
+    }
+
+    .copy-btn.copied {
+      background: rgba(0,0,0,0.3);
+    }
+
+    /* Snippet text */
+    .snippet {
+      font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+      font-size: 13px;
+      background: rgba(0,0,0,0.06);
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-top: 16px;
+      display: inline-block;
+    }
+
+    .card-hero .snippet,
+    .card-dark .snippet {
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .bento {
+        grid-template-columns: 1fr;
+      }
+
+      .card-hero {
+        grid-row: span 1;
+        min-height: 360px;
+      }
+
+      .cards-row {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        border-radius: 32px;
+        padding: 24px;
+      }
+
+      .nav-links { display: none; }
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid #222;
+      font-size: 13px;
+      color: #666;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">copiar</div>
+      <nav class="nav-links">
+        <a href="#">Features</a>
+        <a href="#">Pricing</a>
+        <a href="#">About</a>
+      </nav>
+    </header>
+
+    <div class="bento">
+      <!-- Hero card -->
+      <div class="card card-hero" data-copy="npm install copiar-cli">
+        <h1>Copy paste that actually matters</h1>
+        <div class="hero-visual">
+          <div class="hero-circle"></div>
+          <div class="hero-square"></div>
+        </div>
+        <div class="snippet">npm install copiar-cli</div>
+        <button class="copy-btn" onclick="copyToClipboard(this, 'npm install copiar-cli')">Copy</button>
+      </div>
+
+      <!-- Right column -->
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="cards-row">
+          <div class="card card-white" data-copy="git checkout -b feature/new">
+            <h3>Quick Commands</h3>
+            <p>Save your most-used terminal snippets</p>
+            <div class="snippet">git checkout -b feature/new</div>
+            <button class="copy-btn" onclick="copyToClipboard(this, 'git checkout -b feature/new')">Copy</button>
+          </div>
+
+          <div class="card card-dark" data-copy="const [state, setState] = useState()">
+            <h3>Code Snippets</h3>
+            <p>React hooks, API calls, patterns</p>
+            <div class="snippet">useState()</div>
+            <button class="copy-btn" onclick="copyToClipboard(this, 'const [state, setState] = useState()')">Copy</button>
+          </div>
+        </div>
+
+        <div class="card card-yellow" data-copy="Thanks for reaching out. I'll get back to you shortly.">
+          <h3>Quick Responses</h3>
+          <p>Email templates, common replies, saved messages</p>
+          <div class="snippet">Thanks for reaching out...</div>
+          <button class="copy-btn" onclick="copyToClipboard(this, 'Thanks for reaching out. I\'ll get back to you shortly.')">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>copiar.online — minimal clipboard for what matters</p>
+    </footer>
+  </div>
+
+  <script>
+    function copyToClipboard(button, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const original = button.textContent;
+        button.textContent = 'Copied!';
+        button.classList.add('copied');
+        setTimeout(() => {
+          button.textContent = original;
+          button.classList.remove('copied');
+        }, 1500);
+      });
+    }
+  </script>
+</body>
+</html>
